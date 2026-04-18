@@ -7,7 +7,7 @@ def test():
     with open("test_response.json", "r") as f:
         return json.load(f)
     
-def match_v4():
+def match_v4(foo=None):
     with open("match_response.json", "r") as f:
         return json.load(f)
     
