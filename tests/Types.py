@@ -1,6 +1,36 @@
 from typing import TypedDict
 
-match_v4_TYPE_1 = TypedDict("match_v4_TYPE_1", {
+freeChampionIdsForNewPlayers_dto = TypedDict("freeChampionIdsForNewPlayers_dto", {
+   "name" : str,
+   "age" : int,
+   "job" : str,
+   "life" : str,
+})
+
+details_dto = TypedDict("details_dto", {
+   "name" : str,
+   "age" : int,
+   "job" : str,
+})
+
+listOfDetails_dto = TypedDict("listOfDetails_dto", {
+   "name" : str,
+   "age" : int,
+   "date" : details_dto,
+})
+
+test_dto = TypedDict("test_dto", {
+   "freeChampionIds" : list[int],
+   "freeChampionIdsForNewPlayers" : list[freeChampionIdsForNewPlayers_dto | int],
+   "maxNewPlayerLevel" : int,
+   "foo" : str,
+   "bar" : int,
+   "details" : details_dto,
+   "list_of_details" : list[listOfDetails_dto | details_dto],
+   "list_of_any" : list[listOfDetails_dto | int | str],
+})
+
+matchV4_dto = TypedDict("matchV4_dto", {
    "leagueId" : str,
    "queueType" : str,
    "tier" : str,
@@ -14,15 +44,4 @@ match_v4_TYPE_1 = TypedDict("match_v4_TYPE_1", {
    "freshBlood" : bool,
    "hotStreak" : bool,
 })
-_2,
-})
-test_TYPE_4 = TypedDict("test_TYPE_4", {
-   "freeChampionIds" : list[int],
-   "freeChampionIdsForNewPlayers" : list[test_TYPE_1 | int],
-   "maxNewPlayerLevel" : int,
-   "foo" : str,
-   "bar" : int,
-   "details" : test_TYPE_2,
-   "list_of_details" : list[test_TYPE_3 | test_TYPE_2],
-   "list_of_any" : list[test_TYPE_3 | str | int],
-})
+

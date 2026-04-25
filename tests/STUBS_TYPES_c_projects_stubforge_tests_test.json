@@ -1,9 +1,9 @@
 {
     "test()": {
-        "stub": "def test() -> test_TYPE_4: ...\n",
+        "stub": "def test() -> test_dto: ...\n",
         "schema_list": [
             {
-                "schema_name": "test_TYPE_1",
+                "schema_name": "freeChampionIdsForNewPlayers_dto",
                 "schema_fields": {
                     "name": "str",
                     "age": "int",
@@ -12,7 +12,7 @@
                 }
             },
             {
-                "schema_name": "test_TYPE_2",
+                "schema_name": "details_dto",
                 "schema_fields": {
                     "name": "str",
                     "age": "int",
@@ -20,33 +20,33 @@
                 }
             },
             {
-                "schema_name": "test_TYPE_3",
+                "schema_name": "listOfDetails_dto",
                 "schema_fields": {
                     "name": "str",
                     "age": "int",
-                    "date": "test_TYPE_2"
+                    "date": "details_dto"
                 }
             },
             {
-                "schema_name": "test_TYPE_4",
+                "schema_name": "test_dto",
                 "schema_fields": {
                     "freeChampionIds": "list[int]",
-                    "freeChampionIdsForNewPlayers": "list[int | test_TYPE_1]",
+                    "freeChampionIdsForNewPlayers": "list[freeChampionIdsForNewPlayers_dto | int]",
                     "maxNewPlayerLevel": "int",
                     "foo": "str",
                     "bar": "int",
-                    "details": "test_TYPE_2",
-                    "list_of_details": "list[test_TYPE_3 | test_TYPE_2]",
-                    "list_of_any": "list[str | test_TYPE_3 | int]"
+                    "details": "details_dto",
+                    "list_of_details": "list[listOfDetails_dto | details_dto]",
+                    "list_of_any": "list[listOfDetails_dto | int | str]"
                 }
             }
         ]
     },
     "match_v4(foo=None)": {
-        "stub": "def match_v4(foo=None) -> list[match_v4_TYPE_1]: ...\n",
+        "stub": "def match_v4(foo=None) -> list[matchV4_dto]: ...\n",
         "schema_list": [
             {
-                "schema_name": "match_v4_TYPE_1",
+                "schema_name": "matchV4_dto",
                 "schema_fields": {
                     "leagueId": "str",
                     "queueType": "str",
