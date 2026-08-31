@@ -2,6 +2,8 @@ from inspect import signature
 from typing import Callable, Any, TypeAlias, Literal
 import inspect
 import json
+import pathlib
+import os
 
 from collections import OrderedDict
 from stubforge.namespace import render_new_stub_schema
@@ -71,10 +73,21 @@ def stub_builder(
 
     rendered_stub: str = "".join(stub_result)
 
+    ingots_dir: str = f"{func_base_path}.stubforge_ingots"
+
+    try:
+        os.mkdir(ingots_dir)
+    except FileExistsError:
+        pass
+
+    print(ingots_dir)
+
+
     # update the types and stubs, adding any new or changed types in order
-    with open(f"STUBS_TYPES_{func_file_path.replace("\\", "_").removesuffix(".py")}.json".replace(":", ""), "r+") as namespace_f, \
+    # BUG: first open breaks if ingot does not already exist
+    with open(f"{ingots_dir}/{func_file_name.removesuffix(".py")}.json".replace("/", "\\"), "r+") as namespace_f, \
         open(stub_file_path, "r+") as stub_f, \
-        open(func_base_path + f"\\{typing_file_name}", "r+") as typing_f:
+        open(func_base_path + f"{typing_file_name}", "r+") as typing_f:
 
         # search for function signiture
         
@@ -88,30 +101,31 @@ def stub_builder(
             schema_list
         )
 
-        if new_stub_schema:
-
-            for f in [namespace_f, stub_f, typing_f]:
-                f.truncate(0)
-                f.seek(0)
-
-            json.dump(new_stub_schema, namespace_f, indent=4)
-
-            stub_py: str = f"from typing import TypedDict\nfrom {typing_file_name.removesuffix(".py")} import *\n\n"
-            # write updated stub to file
-            for stub in [new_stub_schema[f_sig]["stub"] for f_sig in new_stub_schema.keys()]:
-                # write to stub_f
-                stub_py += stub + "\n"
-            stub_f.write(stub_py)
-
+        if not new_stub_schema:
+            return 
     
-            typing_py: str = "from typing import TypedDict\n\n"
-            for schema_list in [new_stub_schema[f_sig]["schema_list"] for f_sig in new_stub_schema.keys()]:
-                for schema in schema_list:
-                    typing_py += f'{schema["schema_name"]} = TypedDict("{schema["schema_name"]}", {{'
-                    for field_name, field_type in schema["schema_fields"].items():
-                        typing_py += f'\n   "{field_name}" : {field_type},'
-                    typing_py += "\n})\n\n"
-    
-            typing_f.write(typing_py)        
+        for f in [namespace_f, stub_f, typing_f]:
+            f.truncate(0)
+            f.seek(0)
+
+        json.dump(new_stub_schema, namespace_f, indent=4)
+
+        stub_py: str = f"from typing import TypedDict\nfrom {typing_file_name.removesuffix(".py")} import *\n\n"
+        # write updated stub to file
+        for stub in [new_stub_schema[f_sig]["stub"] for f_sig in new_stub_schema.keys()]:
+            # write to stub_f
+            stub_py += stub + "\n"
+
+        stub_f.write(stub_py)
+
+        typing_py: str = "from typing import TypedDict\n\n"
+        for schema_list in [new_stub_schema[f_sig]["schema_list"] for f_sig in new_stub_schema.keys()]:
+            for schema in schema_list:
+                typing_py += f'{schema["schema_name"]} = TypedDict("{schema["schema_name"]}", {{'
+                for field_name, field_type in schema["schema_fields"].items():
+                    typing_py += f'\n   "{field_name}" : {field_type},'
+                typing_py += "\n})\n\n"
+
+        typing_f.write(typing_py)        
 
 

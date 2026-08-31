@@ -1,4 +1,26 @@
 {
+    "match_v4(foo=None)": {
+        "stub": "def match_v4(foo=None) -> list[matchV4_dto]: ...\n",
+        "schema_list": [
+            {
+                "schema_name": "matchV4_dto",
+                "schema_fields": {
+                    "leagueId": "str",
+                    "queueType": "str",
+                    "tier": "str",
+                    "rank": "str",
+                    "puuid": "str",
+                    "leaguePoints": "int",
+                    "wins": "int",
+                    "losses": "int",
+                    "veteran": "bool",
+                    "inactive": "bool",
+                    "freshBlood": "bool",
+                    "hotStreak": "bool"
+                }
+            }
+        ]
+    },
     "test()": {
         "stub": "def test() -> test_dto: ...\n",
         "schema_list": [
@@ -36,30 +58,29 @@
                     "foo": "str",
                     "bar": "int",
                     "details": "details_dto",
-                    "list_of_details": "list[listOfDetails_dto | details_dto]",
-                    "list_of_any": "list[listOfDetails_dto | int | str]"
+                    "list_of_details": "list[details_dto | listOfDetails_dto]",
+                    "list_of_any": "list[int | str | listOfDetails_dto]"
                 }
             }
         ]
     },
-    "match_v4(foo=None)": {
-        "stub": "def match_v4(foo=None) -> list[matchV4_dto]: ...\n",
+    "test2()": {
+        "stub": "def test2() -> test2_dto: ...\n",
         "schema_list": [
             {
-                "schema_name": "matchV4_dto",
+                "schema_name": "freeChampionIdsForNewPlayers_dto",
                 "schema_fields": {
-                    "leagueId": "str",
-                    "queueType": "str",
-                    "tier": "str",
-                    "rank": "str",
-                    "puuid": "str",
-                    "leaguePoints": "int",
-                    "wins": "int",
-                    "losses": "int",
-                    "veteran": "bool",
-                    "inactive": "bool",
-                    "freshBlood": "bool",
-                    "hotStreak": "bool"
+                    "name": "str",
+                    "age": "int",
+                    "job": "str",
+                    "life": "str"
+                }
+            },
+            {
+                "schema_name": "test2_dto",
+                "schema_fields": {
+                    "freeChampionIds": "list[int]",
+                    "freeChampionIdsForNewPlayers": "list[freeChampionIdsForNewPlayers_dto | int]"
                 }
             }
         ]
