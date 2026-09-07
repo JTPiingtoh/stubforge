@@ -1,9 +1,5 @@
 from typing import TypedDict
 from Types import *
 
-def match_v4(foo=None) -> list[matchV4_dto]: ...
-
 def test() -> test_dto: ...
-
-def test2() -> test2_dto: ...
 

@@ -1,47 +1,13 @@
 {
-    "freeChampionIds": [
-        4,
-        7,
-        10,
-        26,
-        42,
-        56,
-        57,
-        59,
-        67,
-        76,
-        83,
-        96,
-        102,
-        106,
-        111,
-        234,
-        245,
-        266,
-        498,
-        526
-    ],
+
     "freeChampionIdsForNewPlayers": [
         17,
-        18,
-        33,
-        37,
-        51,
-        54,
-        80,
-        82,
-        89,
-        91,
-        112,
-        113,
-        115,
-        131,
-        134,
-        145,
-        222,
-        254,
-        350,
-        875,
+        {
+        "evil_name" : "dave",
+        "age" : 42,
+        "job" : "bus driver",
+        "life" : "over"
+        },
         {
         "name" : "dave",
         "age" : 42,
@@ -76,10 +42,10 @@
         "name" : "dave",
         "age" : 42,
         "job" : {
-        "name" : "dave",
-        "age" : 42,
-        "job" : "bus driver"
-    }
+            "name" : "dave",
+            "age" : 42,
+            "job" : "bus driver"
+        }
     }
             }
         ],

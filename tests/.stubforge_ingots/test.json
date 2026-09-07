@@ -1,31 +1,18 @@
 {
-    "match_v4(foo=None)": {
-        "stub": "def match_v4(foo=None) -> list[matchV4_dto]: ...\n",
-        "schema_list": [
-            {
-                "schema_name": "matchV4_dto",
-                "schema_fields": {
-                    "leagueId": "str",
-                    "queueType": "str",
-                    "tier": "str",
-                    "rank": "str",
-                    "puuid": "str",
-                    "leaguePoints": "int",
-                    "wins": "int",
-                    "losses": "int",
-                    "veteran": "bool",
-                    "inactive": "bool",
-                    "freshBlood": "bool",
-                    "hotStreak": "bool"
-                }
-            }
-        ]
-    },
     "test()": {
         "stub": "def test() -> test_dto: ...\n",
         "schema_list": [
             {
-                "schema_name": "freeChampionIdsForNewPlayers_dto",
+                "schema_name": "freeChampionIdsForNewPlayers_0_dto",
+                "schema_fields": {
+                    "evil_name": "str",
+                    "age": "int",
+                    "job": "str",
+                    "life": "str"
+                }
+            },
+            {
+                "schema_name": "freeChampionIdsForNewPlayers_1_dto",
                 "schema_fields": {
                     "name": "str",
                     "age": "int",
@@ -42,7 +29,7 @@
                 }
             },
             {
-                "schema_name": "listOfDetails_dto",
+                "schema_name": "listOfDetails_2_dto",
                 "schema_fields": {
                     "name": "str",
                     "age": "int",
@@ -52,35 +39,13 @@
             {
                 "schema_name": "test_dto",
                 "schema_fields": {
-                    "freeChampionIds": "list[int]",
-                    "freeChampionIdsForNewPlayers": "list[freeChampionIdsForNewPlayers_dto | int]",
+                    "freeChampionIdsForNewPlayers": "list[freeChampionIdsForNewPlayers_0_dto | freeChampionIdsForNewPlayers_1_dto | int]",
                     "maxNewPlayerLevel": "int",
                     "foo": "str",
                     "bar": "int",
                     "details": "details_dto",
-                    "list_of_details": "list[details_dto | listOfDetails_dto]",
-                    "list_of_any": "list[int | str | listOfDetails_dto]"
-                }
-            }
-        ]
-    },
-    "test2()": {
-        "stub": "def test2() -> test2_dto: ...\n",
-        "schema_list": [
-            {
-                "schema_name": "freeChampionIdsForNewPlayers_dto",
-                "schema_fields": {
-                    "name": "str",
-                    "age": "int",
-                    "job": "str",
-                    "life": "str"
-                }
-            },
-            {
-                "schema_name": "test2_dto",
-                "schema_fields": {
-                    "freeChampionIds": "list[int]",
-                    "freeChampionIdsForNewPlayers": "list[freeChampionIdsForNewPlayers_dto | int]"
+                    "list_of_details": "list[details_dto | listOfDetails_2_dto]",
+                    "list_of_any": "list[int | listOfDetails_2_dto | str]"
                 }
             }
         ]

@@ -24,11 +24,15 @@ def to_camel_case(text):
 def parse_list(value: list, schema_list: list[Schema], schema_name: str, func_name: str, mutable_field_type: MutableString):
 
     type_names_in_list = []
-    for obj in value:
+    sub_dtos: int = 0
+    for i, obj in enumerate(value):
         type_name: str
         if isinstance(obj, dict):
-            parse_dict(obj, schema_list, schema_name, func_name)
-            type_name = schema_list[-1]["schema_name"]
+            # BUG: dict is inheriting the name of the list
+            parse_dict(obj, schema_list, schema_name + f"_{sub_dtos}", func_name)
+            # schema_list[-1]["schema_name"] += f"_{i}"
+            sub_dtos+=1
+            type_name = schema_list[-1]["schema_name"] 
         else:
             type_name = type(obj).__name__   
         type_names_in_list.append(type_name)
@@ -38,7 +42,13 @@ def parse_list(value: list, schema_list: list[Schema], schema_name: str, func_na
     elif all(t == type_names_in_list[0] for t in type_names_in_list):
         mutable_field_type.set_string(f"list[{type_names_in_list[0]}]")
     else:
-        mutable_field_type.set_string(f"list[{" | ".join( list(set(type_names_in_list)) )}]")
+        unique_types_names = list(set(type_names_in_list))
+        print(f"schema_name: {schema_name}")
+        print(f"UNsorted unique_types_names: {unique_types_names}")        
+        unique_types_names.sort()
+        print(f"SORTED unique_types_names: {unique_types_names}")
+        print()
+        mutable_field_type.set_string(f"list[{" | ".join( unique_types_names )}]")
 
 
 def parse_dict(result: dict, schema_list: list[Schema], schema_name: str, func_name: str):

@@ -73,18 +73,20 @@ def stub_builder(
 
     rendered_stub: str = "".join(stub_result)
 
-    ingots_dir: str = f"{func_base_path}.stubforge_ingots"
+    ingots_dir = pathlib.Path(f"{func_base_path}.stubforge_ingots")
+    ingot = pathlib.Path(f"{ingots_dir}/{func_file_name.removesuffix(".py")}.json".replace("/", "\\"))
 
-    try:
+    if not ingots_dir.exists():
         os.mkdir(ingots_dir)
-    except FileExistsError:
-        pass
 
-    print(ingots_dir)
+    if not ingot.exists():
+        with open(ingot, "w") as _:
+            pass 
 
 
     # update the types and stubs, adding any new or changed types in order
     # BUG: first open breaks if ingot does not already exist
+
     with open(f"{ingots_dir}/{func_file_name.removesuffix(".py")}.json".replace("/", "\\"), "r+") as namespace_f, \
         open(stub_file_path, "r+") as stub_f, \
         open(func_base_path + f"{typing_file_name}", "r+") as typing_f:
@@ -103,7 +105,10 @@ def stub_builder(
 
         if not new_stub_schema:
             return 
-    
+
+        print(func_file_name)
+        print("passed")
+
         for f in [namespace_f, stub_f, typing_f]:
             f.truncate(0)
             f.seek(0)
