@@ -1,0 +1,18 @@
+{
+    "id": 1001,
+    "name": "Alice Smith",
+    "email": "alice@example.com",
+    "address": {
+        "line1": "123 Example Street",
+        "city": "Brighton",
+        "postcode": "BN1 1AA",
+        "country": "United Kingdom"
+    },
+    "company": {
+        "name": "Example Ltd",
+        "department": {
+            "name": "Engineering",
+            "floor": 3
+        }
+    }
+}

@@ -10,11 +10,10 @@ from stubforge.namespace import render_new_stub_schema
 from stubforge.stubforge_types import *
 from stubforge.parsers import to_camel_case, parse_dict, parse_list
 
-
-
 SigStubSchemaMapping: TypeAlias = OrderedDict[Literal["stub", "schema_list"], Any]
 StubSchemaMapping: TypeAlias = OrderedDict[str, SigStubSchemaMapping] 
 
+# TODO: re-write this fucking mess
 def stub_builder(
     func: Callable[[], dict | list], 
     typing_file_name: str | None = None
@@ -64,32 +63,37 @@ def stub_builder(
     func_file_path = inspect.getfile(func)
     func_file_name = func_file_path.split("\\")[-1]
     func_base_path = func_file_path.removesuffix(func_file_name)
-    stub_file_path = func_base_path + f"\\{func_file_name}i" # .pyi
+    stub_file_path = pathlib.Path(f"{func_base_path}\\{func_file_name}i") # .pyi
 
     # base on the new types, write to the typing and stub files
     if not typing_file_name:
         # create a typing file in the same dir as func
         typing_file_name = "Types.py"
+    typing_path = pathlib.Path(f"{func_base_path}\\{typing_file_name}")
 
     rendered_stub: str = "".join(stub_result)
 
     ingots_dir = pathlib.Path(f"{func_base_path}.stubforge_ingots")
-    ingot = pathlib.Path(f"{ingots_dir}/{func_file_name.removesuffix(".py")}.json".replace("/", "\\"))
+    ingot_file_path = pathlib.Path(f"{ingots_dir}/{func_file_name.removesuffix(".py")}.json".replace("/", "\\"))
 
     if not ingots_dir.exists():
         os.mkdir(ingots_dir)
 
-    if not ingot.exists():
-        with open(ingot, "w") as _:
-            pass 
+    for path in ingot_file_path, stub_file_path, typing_path:
+        print(path)
+        if not path.exists():
+            with open(path, "w") as _:
+                pass 
 
 
     # update the types and stubs, adding any new or changed types in order
-    # BUG: first open breaks if ingot does not already exist
+    # BUG: files will no re-write so long as ingot file exists with no changes to schema.
+    # This means if user changes stub or typing file and then runs this function, the former 2 files
+    # will not update. Add last updated to ingot and compare to stub and typing files 
 
-    with open(f"{ingots_dir}/{func_file_name.removesuffix(".py")}.json".replace("/", "\\"), "r+") as namespace_f, \
+    with open(ingot_file_path, "r+") as ingot_f, \
         open(stub_file_path, "r+") as stub_f, \
-        open(func_base_path + f"{typing_file_name}", "r+") as typing_f:
+        open(typing_path, "r+") as typing_f:
 
         # search for function signiture
         
@@ -97,7 +101,7 @@ def stub_builder(
         func_sig = func.__name__ + str(inspect.signature(func).replace(return_annotation=inspect.Signature.empty))
     
         new_stub_schema: StubSchemaMapping | None = render_new_stub_schema(
-            namespace_f,
+            ingot_f,
             func_sig,
             rendered_stub,
             schema_list
@@ -109,11 +113,11 @@ def stub_builder(
         print(func_file_name)
         print("passed")
 
-        for f in [namespace_f, stub_f, typing_f]:
+        for f in [ingot_f, stub_f, typing_f]:
             f.truncate(0)
             f.seek(0)
 
-        json.dump(new_stub_schema, namespace_f, indent=4)
+        json.dump(new_stub_schema, ingot_f, indent=4)
 
         stub_py: str = f"from typing import TypedDict\nfrom {typing_file_name.removesuffix(".py")} import *\n\n"
         # write updated stub to file
@@ -121,10 +125,12 @@ def stub_builder(
             # write to stub_f
             stub_py += stub + "\n"
 
+        print(stub_py)
         stub_f.write(stub_py)
 
         typing_py: str = "from typing import TypedDict\n\n"
-        for schema_list in [new_stub_schema[f_sig]["schema_list"] for f_sig in new_stub_schema.keys()]:
+        for schema_list, f_sig in [[new_stub_schema[f_sig]["schema_list"], f_sig] for f_sig in new_stub_schema.keys()]:
+            typing_py += f"# Schema for the funciton {f_sig} #\n"
             for schema in schema_list:
                 typing_py += f'{schema["schema_name"]} = TypedDict("{schema["schema_name"]}", {{'
                 for field_name, field_type in schema["schema_fields"].items():

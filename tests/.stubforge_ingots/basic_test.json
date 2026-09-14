@@ -1,0 +1,16 @@
+{
+    "test()": {
+        "stub": "def test() -> test_dto: ...\n",
+        "schema_list": [
+            {
+                "schema_name": "test_dto",
+                "schema_fields": {
+                    "name": "str",
+                    "age": "int",
+                    "active": "bool",
+                    "score": "float"
+                }
+            }
+        ]
+    }
+}

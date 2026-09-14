@@ -1,0 +1,52 @@
+{
+    "success": true,
+    "request_id": "abc-123",
+    "data": {
+        "user": {
+            "id": 123,
+            "username": "alice",
+            "settings": {
+                "theme": "dark",
+                "notifications": {
+                    "email": true,
+                    "sms": false,
+                    "push": true
+                }
+            }
+        },
+        "orders": [
+            {
+                "id": 5001,
+                "status": "completed",
+                "total": 149.99,
+                "items": [
+                    {
+                        "product_id": 100,
+                        "name": "Keyboard",
+                        "quantity": 1,
+                        "price": 99.99
+                    },
+                    {
+                        "product_id": 101,
+                        "name": "Mouse",
+                        "quantity": 1,
+                        "price": 50.00
+                    }
+                ]
+            },
+            {
+                "id": 5002,
+                "status": "pending",
+                "total": 24.99,
+                "items": [
+                    {
+                        "product_id": 200,
+                        "name": "USB Cable",
+                        "quantity": 2,
+                        "price": 12.495
+                    }
+                ]
+            }
+        ]
+    }
+}

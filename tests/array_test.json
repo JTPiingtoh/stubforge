@@ -1,0 +1,17 @@
+{
+    "id": 12345,
+    "username": "alice123",
+    "roles": [
+        "user",
+        "admin"
+    ],
+    "scores": [
+        87,
+        92,
+        95
+    ],
+    "profile": {
+        "country": "United Kingdom",
+        "verified": true
+    }
+}
