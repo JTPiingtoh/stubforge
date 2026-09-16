@@ -10,8 +10,8 @@ from stubforge.namespace import render_new_stub_schema
 from stubforge.stubforge_types import *
 from stubforge.parsers import to_camel_case, parse_dict, parse_list
 
-SigStubSchemaMapping: TypeAlias = OrderedDict[Literal["stub", "schema_list"], Any]
-StubSchemaMapping: TypeAlias = OrderedDict[str, SigStubSchemaMapping] 
+StubSchemaMapping: TypeAlias = OrderedDict[Literal["stub", "schema_list"], Any]
+SigStubSchemaMapping: TypeAlias = OrderedDict[str, StubSchemaMapping] 
 
 # TODO: re-write this fucking mess
 def stub_builder(
@@ -33,28 +33,27 @@ def stub_builder(
     
     # Store the types found in the result
     
-    func_name = func.__name__
-    
-    schema_name = to_camel_case(func_name)
+    func_name = to_camel_case(func.__name__)
     func_signiture = signature(func)
     schema_list: list[Schema] = []
     # type_count = TypeCount()
     stub_result: list[str] = []
-    func_return_type: SchemaName
+    schema_name: SchemaName
+
+    # parsed_shema = parse_object(result, schema_name, func_name)
 
     try:
-
         if isinstance(result, dict):
-            parse_dict(result, schema_list, schema_name, func_name)
+            parse_dict(result, schema_list, func_name)
             # final entry to the schema list will be the schema of the json file itself
-            func_return_type = schema_list[-1]["schema_name"]       
-            [stub_result.append(c) for c in f"def {func_name}{func_signiture} -> {func_return_type}: ...\n"] # type: ignore [func-returns-value] 
+            schema_name = schema_list[-1]["schema_name"]       
+            [stub_result.append(c) for c in f"def {func_name}{func_signiture} -> {schema_name}: ...\n"] # type: ignore [func-returns-value] 
 
         elif isinstance(result, list):
             mutable_field_type = MutableString("")
-            parse_list(result, schema_list, schema_name, func_name, mutable_field_type)
-            func_return_type = mutable_field_type.get_string()
-            [stub_result.append(c) for c in f"def {func_name}{func_signiture} -> {func_return_type}: ...\n"] # type: ignore [func-returns-value]
+            parse_list(result, schema_list, func_name, mutable_field_type)
+            schema_name = mutable_field_type.get_string()
+            [stub_result.append(c) for c in f"def {func_name}{func_signiture} -> {schema_name}: ...\n"] # type: ignore [func-returns-value]
 
     except RecursionError:
         raise RecursionError(f"Returned object from {func_name} is too nested.")
@@ -100,14 +99,14 @@ def stub_builder(
         # get just the func args
         func_sig = func.__name__ + str(inspect.signature(func).replace(return_annotation=inspect.Signature.empty))
     
-        new_stub_schema: StubSchemaMapping | None = render_new_stub_schema(
+        new_sig_stub_schema_mapping: SigStubSchemaMapping | None = render_new_stub_schema(
             ingot_f,
             func_sig,
             rendered_stub,
             schema_list
         )
 
-        if not new_stub_schema:
+        if not new_sig_stub_schema_mapping:
             return 
 
         print(func_file_name)
@@ -117,11 +116,11 @@ def stub_builder(
             f.truncate(0)
             f.seek(0)
 
-        json.dump(new_stub_schema, ingot_f, indent=4)
+        json.dump(new_sig_stub_schema_mapping, ingot_f, indent=4)
 
         stub_py: str = f"from typing import TypedDict\nfrom {typing_file_name.removesuffix(".py")} import *\n\n"
         # write updated stub to file
-        for stub in [new_stub_schema[f_sig]["stub"] for f_sig in new_stub_schema.keys()]:
+        for stub in [new_sig_stub_schema_mapping[f_sig]["stub"] for f_sig in new_sig_stub_schema_mapping.keys()]:
             # write to stub_f
             stub_py += stub + "\n"
 
@@ -129,7 +128,7 @@ def stub_builder(
         stub_f.write(stub_py)
 
         typing_py: str = "from typing import TypedDict\n\n"
-        for schema_list, f_sig in [[new_stub_schema[f_sig]["schema_list"], f_sig] for f_sig in new_stub_schema.keys()]:
+        for schema_list, f_sig in [[new_sig_stub_schema_mapping[f_sig]["schema_list"], f_sig] for f_sig in new_sig_stub_schema_mapping.keys()]:
             typing_py += f"# Schema for the funciton {f_sig} #\n"
             for schema in schema_list:
                 typing_py += f'{schema["schema_name"]} = TypedDict("{schema["schema_name"]}", {{'

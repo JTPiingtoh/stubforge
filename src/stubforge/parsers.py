@@ -21,7 +21,7 @@ def to_camel_case(text):
         return s[0] + ''.join(i.capitalize() for i in s[1:])
 
 
-def parse_list(value: list, schema_list: list[Schema], schema_name: str, func_name: str, mutable_field_type: MutableString):
+def parse_list(value: list, schema_list: list[Schema], schema_name: str, mutable_field_type: MutableString):
 
     type_names_in_list = []
     sub_dtos: int = 0
@@ -29,7 +29,7 @@ def parse_list(value: list, schema_list: list[Schema], schema_name: str, func_na
         type_name: str
         if isinstance(obj, dict):
             # BUG: dict is inheriting the name of the list
-            parse_dict(obj, schema_list, schema_name + f"_{sub_dtos}", func_name)
+            parse_dict(obj, schema_list, schema_name + f"_dto_{sub_dtos}")
             # schema_list[-1]["schema_name"] += f"_{i}"
             sub_dtos+=1
             type_name = schema_list[-1]["schema_name"] 
@@ -43,15 +43,11 @@ def parse_list(value: list, schema_list: list[Schema], schema_name: str, func_na
         mutable_field_type.set_string(f"list[{type_names_in_list[0]}]")
     else:
         unique_types_names = list(set(type_names_in_list))
-        print(f"schema_name: {schema_name}")
-        print(f"UNsorted unique_types_names: {unique_types_names}")        
         unique_types_names.sort()
-        print(f"SORTED unique_types_names: {unique_types_names}")
-        print()
         mutable_field_type.set_string(f"list[{" | ".join( unique_types_names )}]")
 
 
-def parse_dict(result: dict, schema_list: list[Schema], schema_name: str, func_name: str):
+def parse_dict(result: dict, schema_list: list[Schema], schema_name: str):
 
     if not isinstance(result, dict) or result.keys() in [fields.keys() for fields in [schema["schema_fields"] for schema in schema_list]]:
         return
@@ -64,21 +60,39 @@ def parse_dict(result: dict, schema_list: list[Schema], schema_name: str, func_n
         field_type: FieldType
 
         if isinstance(value, dict):
-            parse_dict(value, schema_list, to_camel_case(key), func_name)
+            parse_dict(value, schema_list, to_camel_case(key) + "_dto")
             field_type = schema_list[-1]["schema_name"]
 
         elif isinstance(value, list):
             mutable_field_type = MutableString("")
-            parse_list(value, schema_list, to_camel_case(key), func_name, mutable_field_type)
+            parse_list(value, schema_list, to_camel_case(key) + "_dto", mutable_field_type)
             field_type = mutable_field_type.get_string()
 
         else:
             field_type = type(value).__name__
 
         schema_fields[field_name] = field_type
-    
 
-    schema_name += "_dto"
+    # schema_name += "_dto"
     schema_list.append({"schema_name" : f"{schema_name}", "schema_fields" : schema_fields})
 
     return
+
+
+def parse_object(object: Any, object_name: SchemaName) -> tuple[SchemaName, list[Schema]]:
+
+    schema_list: list[Schema] = []
+    schema_name: SchemaName 
+
+    if isinstance(object, dict):
+        parse_dict(object, schema_list, object_name  + "_dto")
+        schema_name = schema_list[-1]["schema_name"]
+
+    elif isinstance(object, list):
+
+        mutable_schema_name = MutableString("")
+        parse_list(object, schema_list, object_name + "_dto", mutable_schema_name)
+        
+
+    return schema_name, schema_list
+    
