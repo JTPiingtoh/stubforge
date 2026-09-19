@@ -21,7 +21,11 @@ def to_camel_case(text):
         return s[0] + ''.join(i.capitalize() for i in s[1:])
 
 
-def parse_list(value: list, schema_list: list[Schema], schema_name: str, mutable_field_type: MutableString):
+def parse_object_if_list(
+    value: list, 
+    schema_list: list[Schema], 
+    object_name: ObjectName,  
+    mutable_field_type: MutableString) -> tuple[SchemaName, list[Schema]]:
 
     type_names_in_list = []
     sub_dtos: int = 0
@@ -29,14 +33,16 @@ def parse_list(value: list, schema_list: list[Schema], schema_name: str, mutable
         type_name: str
         if isinstance(obj, dict):
             # BUG: dict is inheriting the name of the list
-            parse_dict(obj, schema_list, schema_name + f"_dto_{sub_dtos}")
+            schema_name, schema_list = parse_object_if_dict(obj, schema_list, schema_name + f"_dto_{sub_dtos}")
             # schema_list[-1]["schema_name"] += f"_{i}"
             sub_dtos+=1
             type_name = schema_list[-1]["schema_name"] 
         else:
             type_name = type(obj).__name__   
+
         type_names_in_list.append(type_name)
 
+    # This could be made into a seperate function
     if len(type_names_in_list) == 0:
         mutable_field_type.set_string(f"list[{type_names_in_list[0]}]")
     elif all(t == type_names_in_list[0] for t in type_names_in_list):
@@ -47,52 +53,61 @@ def parse_list(value: list, schema_list: list[Schema], schema_name: str, mutable
         mutable_field_type.set_string(f"list[{" | ".join( unique_types_names )}]")
 
 
-def parse_dict(result: dict, schema_list: list[Schema], schema_name: str):
+def parse_object_if_dict(
+    result: dict, 
+    schema_list: list[Schema], 
+    object_name: ObjectName) -> tuple[SchemaName, list[Schema]]:
 
-    if not isinstance(result, dict) or result.keys() in [fields.keys() for fields in [schema["schema_fields"] for schema in schema_list]]:
-        return
+    schema_name: SchemaName
+
+    if not isinstance(result, dict) or result.keys() in [
+        fields.keys() for fields in [
+            schema["schema_fields"] for schema in schema_list
+            ]
+        ]:
+        return object_name, schema_list
 
     # build a list containing names and types of this dict
     schema_fields: SchemaFields = OrderedDict()
+    new_schema_list: list[Schema] = []
+
     for key, value in result.items():
 
-        field_name: FieldName = str(key)
-        field_type: FieldType
+        field_name: SchemaName
 
         if isinstance(value, dict):
-            parse_dict(value, schema_list, to_camel_case(key) + "_dto")
-            field_type = schema_list[-1]["schema_name"]
+            field_name, new_schema_list = parse_object_if_dict(value, schema_list, to_camel_case(key) + "_dto")
+            # field_type = new_schema_list[-1]["schema_name"]
 
         elif isinstance(value, list):
-            mutable_field_type = MutableString("")
-            parse_list(value, schema_list, to_camel_case(key) + "_dto", mutable_field_type)
-            field_type = mutable_field_type.get_string()
+            field_name, new_schema_list = parse_object_if_list(value, schema_list, to_camel_case(key) + "_dto")
 
         else:
-            field_type = type(value).__name__
+            field_name = type(value).__name__
 
-        schema_fields[field_name] = field_type
+        schema_fields[field_name] = field_name
 
     # schema_name += "_dto"
-    schema_list.append({"schema_name" : f"{schema_name}", "schema_fields" : schema_fields})
+    new_schema_list.append({"schema_name" : f"{object_name}", "schema_fields" : schema_fields})
+    schema_name = new_schema_list[-1]["schema_name"]
 
-    return
+    return schema_name, new_schema_list
+    
 
-
-def parse_object(object: Any, object_name: SchemaName) -> tuple[SchemaName, list[Schema]]:
+def parse_object(object: Any, object_name: ObjectName) -> tuple[SchemaName, list[Schema]]:
 
     schema_list: list[Schema] = []
-    schema_name: SchemaName 
+    schema_name: SchemaName = ""
 
     if isinstance(object, dict):
-        parse_dict(object, schema_list, object_name  + "_dto")
+        schema_list = parse_object_if_dict(object, schema_list, object_name  + "_dto")
         schema_name = schema_list[-1]["schema_name"]
 
     elif isinstance(object, list):
 
         mutable_schema_name = MutableString("")
-        parse_list(object, schema_list, object_name + "_dto", mutable_schema_name)
-        
+        schema_list = parse_object_if_list(object, schema_list, object_name + "_dto", mutable_schema_name)
+        schema_name = ""
 
     return schema_name, schema_list
     
