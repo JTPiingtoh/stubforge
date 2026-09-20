@@ -11,12 +11,12 @@ class Field(TypedDict):
     field_type: FieldType
 
 # The fields and types of a schema, stored in a dict
-SchemaFields: TypeAlias = OrderedDict[ObjectName, FieldType]
+SchemaFieldsDict: TypeAlias = OrderedDict[ObjectName, FieldType]
 
 # An object that contains the name of the schema, and its fields 
 class Schema(TypedDict):
     schema_name: ObjectName
-    schema_fields: SchemaFields
+    schema_fields_dict: SchemaFieldsDict
 
 class MutableString:
     def __init__(self, s: str):

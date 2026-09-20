@@ -68,12 +68,13 @@ def parse_object_if_dict(
         return object_name, schema_list
 
     # build a list containing names and types of this dict
-    schema_fields: SchemaFields = OrderedDict()
+    schema_fields_dict: SchemaFieldsDict = OrderedDict()
     new_schema_list: list[Schema] = []
 
     for key, value in result.items():
 
         field_name: SchemaName
+        field_type: FieldType
 
         if isinstance(value, dict):
             field_name, new_schema_list = parse_object_if_dict(value, schema_list, to_camel_case(key) + "_dto")
@@ -85,10 +86,10 @@ def parse_object_if_dict(
         else:
             field_name = type(value).__name__
 
-        schema_fields[field_name] = field_name
+        schema_fields_dict[field_name] = field_name
 
     # schema_name += "_dto"
-    new_schema_list.append({"schema_name" : f"{object_name}", "schema_fields" : schema_fields})
+    new_schema_list.append({"schema_name" : f"{object_name}", "schema_fields" : schema_fields_dict})
     schema_name = new_schema_list[-1]["schema_name"]
 
     return schema_name, new_schema_list
