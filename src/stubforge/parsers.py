@@ -73,7 +73,7 @@ def parse_object_if_dict(
 
     for key, value in result.items():
 
-        field_name: SchemaName
+        field_name: SchemaName = str(key)
         field_type: FieldType
 
         if isinstance(value, dict):
