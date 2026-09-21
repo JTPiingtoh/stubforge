@@ -36,7 +36,6 @@ def stub_builder(
     func_name: str = func.__name__
     schema_name: SchemaName = to_camel_case(func_name)
     func_signiture = signature(func)
-    schema_list: list[Schema] = []
     # type_count = TypeCount()
     rendered_stub: str = ""
     
@@ -44,8 +43,7 @@ def stub_builder(
     # schema_list = parse_object(result, schema_name, func_name)
     # schema_name
     try:
-       
-        schema_list = render_schema_list(result, schema_list, func_name)
+        schema_list = render_schema_list(result, schema_name)
         rendered_stub = f"def {func_name}{func_signiture} -> {schema_name}: ...\n"] # type: ignore [func-returns-value]
 
     except RecursionError:

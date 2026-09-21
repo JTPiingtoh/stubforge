@@ -54,8 +54,8 @@ def _update_schema_list_from_list(
 
 def _update_schema_list_from_dict(
     Dict: dict, 
-    schema_list: list[Schema], 
-    schema_name: SchemaName) -> list[Schema]:
+    schema_list: list[Schema]) -> list[Schema]:
+
 
     if not isinstance(Dict, dict) or Dict.keys() in [
         fields.keys() for fields in [
@@ -74,9 +74,9 @@ def _update_schema_list_from_dict(
         schema_field_type: SchemaFieldType
 
         if isinstance(value, dict):
-            updated_schema_list = _update_schema_list_from_dict(value, schema_list, to_camel_case(key) + "_dto")
+            updated_schema_list = _update_schema_list_from_dict(value, schema_list)
             # a new schema has been added to the list. The name of this schema is the field type of Dict[key]
-            schema_field_type = updated_schema_list[-1]["schema_name"]
+            schema_field_type = to_camel_case(key) + "_dto"
 
         elif isinstance(value, list):
             updated_schema_list = _update_schema_list_from_list(value, schema_list, to_camel_case(key) + "_dto")
@@ -93,17 +93,14 @@ def _update_schema_list_from_dict(
     return updated_schema_list
     
 
-def render_schema_list(object: Any, object_name: SchemaName) -> tuple[SchemaName, list[Schema]]:
+def render_schema_list(object: Any, object_name: SchemaName) -> list[Schema]:
 
     schema_list: list[Schema] = []
-    schema_name: SchemaName = ""
 
     if isinstance(object, dict):
         schema_list = _update_schema_list_from_dict(object, schema_list, object_name  + "_dto")
-        schema_name = schema_list[-1]["schema_name"]
 
     elif isinstance(object, list):
-
         schema_list = _update_schema_list_from_list(object, schema_list, object_name  + "_dto")
 
     return schema_list
