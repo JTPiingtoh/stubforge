@@ -8,7 +8,7 @@ import os
 from collections import OrderedDict
 from stubforge.namespace import render_new_stub_schema
 from stubforge.stubforge_types import *
-from stubforge.parsers import to_camel_case, parse_object_if_dict, parse_object_if_list
+from stubforge.parsers import to_camel_case, render_schema_list
 
 StubSchemaMapping: TypeAlias = OrderedDict[Literal["stub", "schema_list"], Any]
 SigStubSchemaMapping: TypeAlias = OrderedDict[str, StubSchemaMapping] 
@@ -33,26 +33,20 @@ def stub_builder(
     
     # Store the types found in the result
     
-    func_name: ObjectName = to_camel_case(func.__name__)
+    func_name: str = func.__name__
+    schema_name: SchemaName = to_camel_case(func_name)
     func_signiture = signature(func)
     schema_list: list[Schema] = []
     # type_count = TypeCount()
     rendered_stub: str = ""
-    schema_name: ObjectName
+    
 
-    # parsed_shema = parse_object(result, schema_name, func_name)
-
+    # schema_list = parse_object(result, schema_name, func_name)
+    # schema_name
     try:
-        if isinstance(result, dict):
-            schema_name, schema_list = parse_object_if_dict(result, schema_list, func_name)
-            # final entry to the schema list will be the schema of the json file itself
-            rendered_stub = f"def {func_name}{func_signiture} -> {schema_name}: ...\n"] # type: ignore [func-returns-value]
-
-        elif isinstance(result, list):
-            mutable_field_type = MutableString("")
-            schema_name, schema_list = parse_object_if_list(result, schema_list, func_name, mutable_field_type)
-            schema_name = mutable_field_type.get_string()
-            rendered_stub = f"def {func_name}{func_signiture} -> {schema_name}: ...\n"] # type: ignore [func-returns-value]
+       
+        schema_list = render_schema_list(result, schema_list, func_name)
+        rendered_stub = f"def {func_name}{func_signiture} -> {schema_name}: ...\n"] # type: ignore [func-returns-value]
 
     except RecursionError:
         raise RecursionError(f"Returned object from {func_name} is too nested.")

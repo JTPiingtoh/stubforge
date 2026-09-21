@@ -1,21 +1,19 @@
 from collections import OrderedDict
 from typing import TypeAlias, TypedDict
 
-FieldType: TypeAlias = str
+
 # The name of a schema
-ObjectName: TypeAlias = str
 SchemaName: TypeAlias = str
 
-class Field(TypedDict):
-    field_name: ObjectName
-    field_type: FieldType
+SchemaFieldName: TypeAlias = str
+SchemaFieldType: TypeAlias = str
 
 # The fields and types of a schema, stored in a dict
-SchemaFieldsDict: TypeAlias = OrderedDict[ObjectName, FieldType]
+SchemaFieldsDict: TypeAlias = OrderedDict[SchemaName, SchemaFieldType]
 
 # An object that contains the name of the schema, and its fields 
 class Schema(TypedDict):
-    schema_name: ObjectName
+    schema_name: SchemaName
     schema_fields_dict: SchemaFieldsDict
 
 class MutableString:
