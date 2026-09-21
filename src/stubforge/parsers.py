@@ -20,7 +20,22 @@ def to_camel_case(text):
             return text
         return s[0] + ''.join(i.capitalize() for i in s[1:])
 
+'''
+freeChampionIdsForNewPlayers_dto: TypeAlias = list[freeChampionIdsForNewPlayers_0_dto | freeChampionIdsForNewPlayers_1_dto | int]
 
+details_dto = TypedDict("detail_dto", {
+   "name" : str,
+   "age" : int,
+   "active" : bool,
+   "score" : float,
+})
+
+
+test_dto = TypedDict("test_dto", {
+   "freeChampionIdsForNewPlayers" : freeChampionIdsForNewPlayers_dto,
+   "details" : details_dto,
+})
+'''
 def _update_schema_list_from_list(
     value: list, 
     schema_list: list[Schema], 

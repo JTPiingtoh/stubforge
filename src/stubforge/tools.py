@@ -87,7 +87,9 @@ def stub_builder(
         
         # get just the func args
         func_sig = func.__name__ + str(inspect.signature(func).replace(return_annotation=inspect.Signature.empty))
-    
+
+
+        # TODO Replace this garbage with a strcmp on the JSON
         new_sig_stub_schema_mapping: SigStubSchemaMapping | None = render_new_stub_schema(
             ingot_f,
             func_sig,
@@ -100,6 +102,7 @@ def stub_builder(
 
         print(func_file_name)
         print("passed")
+
 
         for f in [ingot_f, stub_f, typing_f]:
             f.truncate(0)
@@ -116,6 +119,8 @@ def stub_builder(
         print(stub_py)
         stub_f.write(stub_py)
 
+
+        # TODO: move rendering to parsing functions themselves, or add list rendering (might have to add info as to whether its a dict or list)
         typing_py: str = "from typing import TypedDict\n\n"
         for schema_list, f_sig in [[new_sig_stub_schema_mapping[f_sig]["schema_list"], f_sig] for f_sig in new_sig_stub_schema_mapping.keys()]:
             typing_py += f"# Schema for the funciton {f_sig} #\n"
