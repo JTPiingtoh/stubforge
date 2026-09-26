@@ -1,0 +1,16 @@
+{
+    "array_of_arrays_test()": {
+        "stub": "def array_of_arrays_test() -> arrayOfArraysTest_dto: ...\n",
+        "schema_list": [
+            {
+                "schema_name": "arrayOfArraysTest_dto",
+                "schema_fields_dict": {
+                    "matrix": "list[list[int]]",
+                    "nested_values": "list[list[str]]",
+                    "mixed_depth": "list[list[list[int]]]",
+                    "empty_arrays": "list[None | list[int]]"
+                }
+            }
+        ]
+    }
+}

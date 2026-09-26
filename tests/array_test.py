@@ -4,9 +4,8 @@ import pathlib
 
 parent = pathlib.PurePath(__file__).parent
 def test():
-    with open(f"{parent}/basic_test.json", "r") as f:
+    with open(f"{parent}/array_test.json", "r") as f:
         return json.load(f)
 
 
 tools.stub_builder(test)
-

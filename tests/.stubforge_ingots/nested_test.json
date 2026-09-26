@@ -1,0 +1,40 @@
+{
+    "test()": {
+        "stub": "def test() -> test_dto: ...\n",
+        "schema_list": [
+            {
+                "schema_name": "address_dto",
+                "schema_fields_dict": {
+                    "line1": "str",
+                    "city": "str",
+                    "postcode": "str",
+                    "country": "str"
+                }
+            },
+            {
+                "schema_name": "department_dto",
+                "schema_fields_dict": {
+                    "name": "str",
+                    "floor": "int"
+                }
+            },
+            {
+                "schema_name": "company_dto",
+                "schema_fields_dict": {
+                    "name": "str",
+                    "department": "department_dto"
+                }
+            },
+            {
+                "schema_name": "test_dto",
+                "schema_fields_dict": {
+                    "id": "int",
+                    "name": "str",
+                    "email": "str",
+                    "address": "address_dto",
+                    "company": "company_dto"
+                }
+            }
+        ]
+    }
+}

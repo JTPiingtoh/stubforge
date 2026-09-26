@@ -3,10 +3,9 @@ import json
 import pathlib
 
 parent = pathlib.PurePath(__file__).parent
-def test():
-    with open(f"{parent}/basic_test.json", "r") as f:
+def deep_nested_test():
+    with open(f"{parent}/deep_nested_test.json", "r") as f:
         return json.load(f)
 
 
-tools.stub_builder(test)
-
+tools.stub_builder(deep_nested_test)

@@ -5,11 +5,11 @@ from typing import TypeAlias, TypedDict
 # The name of a schema
 SchemaName: TypeAlias = str
 
-SchemaFieldName: TypeAlias = str
+FieldName: TypeAlias = str
 SchemaFieldType: TypeAlias = str
 
 # The fields and types of a schema, stored in a dict
-SchemaFieldsDict: TypeAlias = OrderedDict[SchemaName, SchemaFieldType]
+SchemaFieldsDict: TypeAlias = OrderedDict[FieldName, SchemaFieldType]
 
 # An object that contains the name of the schema, and its fields 
 class Schema(TypedDict):

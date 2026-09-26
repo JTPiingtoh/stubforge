@@ -34,15 +34,20 @@ def stub_builder(
     # Store the types found in the result
     
     func_name: str = func.__name__
-    schema_name: SchemaName = to_camel_case(func_name)
+    schema_name: SchemaName = to_camel_case(func_name) + "_dto"
     func_signiture = signature(func)
-    # type_count = TypeCount()
     rendered_stub: str = ""
-    
+    schema_list: list[Schema] | None
     
     try:
-        object_type_descriptor_dict = render_object_list(result, schema_name)
-        rendered_stub = f"def {func_name}{func_signiture} -> {schema_name}: ...\n" # type: ignore [func-returns-value]
+        schema_list = render_object_list(result, schema_name)
+
+        if schema_list:
+            rendered_stub = f"def {func_name}{func_signiture} -> {schema_name}: ...\n" # type: ignore [func-returns-value]
+
+        else:
+            rendered_stub = f"def {func_name}{func_signiture} -> {type(result).__name__}: ...\n" # type: ignore [func-returns-value]
+
 
     except RecursionError:
         raise RecursionError(f"Returned object from {func_name} is too nested.")
@@ -87,7 +92,7 @@ def stub_builder(
         func_sig = func.__name__ + str(inspect.signature(func).replace(return_annotation=inspect.Signature.empty))
 
 
-        # TODO Replace this. The 
+        # TODO Replace this. 
         new_sig_stub_schema_mapping: SigStubSchemaMapping | None = render_new_stub_schema(
             ingot_f,
             func_sig,
@@ -117,10 +122,14 @@ def stub_builder(
         # TODO: move rendering to parsing functions themselves, or add list rendering (might have to add info as to whether its a dict or list)
         typing_py: str = "from typing import TypedDict\n\n"
         for schema_list, f_sig in [[new_sig_stub_schema_mapping[f_sig]["schema_list"], f_sig] for f_sig in new_sig_stub_schema_mapping.keys()]:
-            typing_py += f"# Schema for the funciton {f_sig} #\n"
+            typing_py += f"# Schema for the function {f_sig} #\n"
+
+            if not schema_list:
+                continue
+
             for schema in schema_list:
                 typing_py += f'{schema["schema_name"]} = TypedDict("{schema["schema_name"]}", {{'
-                for field_name, field_type in schema["schema_fields"].items():
+                for field_name, field_type in schema["schema_fields_dict"].items():
                     typing_py += f'\n   "{field_name}" : {field_type},'
                 typing_py += "\n})\n\n"
 

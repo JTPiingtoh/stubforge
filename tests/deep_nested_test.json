@@ -1,0 +1,90 @@
+{
+    "departments": [
+        {
+            "name": "Pharmacy",
+            "teams": [
+                [
+                    {
+                        "id": 101,
+                        "name": "Aseptics",
+                        "members": [
+                            {
+                                "id": 1001,
+                                "name": "Alice",
+                                "roles": [
+                                    "technician",
+                                    "supervisor"
+                                ]
+                            },
+                            {
+                                "id": 1002,
+                                "name": "Bob",
+                                "roles": [
+                                    "technician"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": 102,
+                        "name": "Dispensary",
+                        "members": [
+                            {
+                                "id": 1003,
+                                "name": "Charlie",
+                                "roles": [
+                                    "technician",
+                                    "accuracy_checker"
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                [
+                    {
+                        "id": 103,
+                        "name": "Stores",
+                        "members": [
+                            {
+                                "id": 1004,
+                                "name": "Dave",
+                                "roles": [
+                                    "assistant",
+                                    "stock_controller"
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            ]
+        },
+        {
+            "name": "IT",
+            "teams": [
+                [
+                    {
+                        "id": 201,
+                        "name": "Development",
+                        "members": [
+                            {
+                                "id": 2001,
+                                "name": "Eve",
+                                "roles": [
+                                    "developer",
+                                    "tester"
+                                ]
+                            },
+                            {
+                                "id": 2002,
+                                "name": "Frank",
+                                "roles": [
+                                    "developer"
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            ]
+        }
+    ]
+}

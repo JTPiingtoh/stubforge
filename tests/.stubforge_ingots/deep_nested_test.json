@@ -1,0 +1,36 @@
+{
+    "deep_nested_test()": {
+        "stub": "def deep_nested_test() -> deepNestedTest_dto: ...\n",
+        "schema_list": [
+            {
+                "schema_name": "memberslist_dto",
+                "schema_fields_dict": {
+                    "id": "int",
+                    "name": "str",
+                    "roles": "list[str]"
+                }
+            },
+            {
+                "schema_name": "teamslist_dto",
+                "schema_fields_dict": {
+                    "id": "int",
+                    "name": "str",
+                    "members": "list[memberslist_dto]"
+                }
+            },
+            {
+                "schema_name": "departmentslist_dto",
+                "schema_fields_dict": {
+                    "name": "str",
+                    "teams": "list[list[teamslist_dto]]"
+                }
+            },
+            {
+                "schema_name": "deepNestedTest_dto",
+                "schema_fields_dict": {
+                    "departments": "list[departmentslist_dto]"
+                }
+            }
+        ]
+    }
+}

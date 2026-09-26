@@ -4,7 +4,7 @@
         "schema_list": [
             {
                 "schema_name": "test_dto",
-                "schema_fields": {
+                "schema_fields_dict": {
                     "name": "str",
                     "age": "int",
                     "active": "bool",

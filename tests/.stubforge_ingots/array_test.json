@@ -1,0 +1,24 @@
+{
+    "test()": {
+        "stub": "def test() -> test_dto: ...\n",
+        "schema_list": [
+            {
+                "schema_name": "profile_dto",
+                "schema_fields_dict": {
+                    "country": "str",
+                    "verified": "bool"
+                }
+            },
+            {
+                "schema_name": "test_dto",
+                "schema_fields_dict": {
+                    "id": "int",
+                    "username": "str",
+                    "roles": "list[str]",
+                    "scores": "list[int]",
+                    "profile": "profile_dto"
+                }
+            }
+        ]
+    }
+}
