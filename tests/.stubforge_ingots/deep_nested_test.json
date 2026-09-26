@@ -3,7 +3,7 @@
         "stub": "def deep_nested_test() -> deepNestedTest_dto: ...\n",
         "schema_list": [
             {
-                "schema_name": "memberslist_dto",
+                "schema_name": "memberslist_dto_0",
                 "schema_fields_dict": {
                     "id": "int",
                     "name": "str",
@@ -11,24 +11,24 @@
                 }
             },
             {
-                "schema_name": "teamslist_dto",
+                "schema_name": "teamslist_dto_0",
                 "schema_fields_dict": {
                     "id": "int",
                     "name": "str",
-                    "members": "list[memberslist_dto]"
+                    "members": "list[memberslist_dto_0]"
                 }
             },
             {
-                "schema_name": "departmentslist_dto",
+                "schema_name": "departmentslist_dto_0",
                 "schema_fields_dict": {
                     "name": "str",
-                    "teams": "list[list[teamslist_dto]]"
+                    "teams": "list[None | list[teamslist_dto_0]]"
                 }
             },
             {
                 "schema_name": "deepNestedTest_dto",
                 "schema_fields_dict": {
-                    "departments": "list[departmentslist_dto]"
+                    "departments": "list[departmentslist_dto_0]"
                 }
             }
         ]

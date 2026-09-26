@@ -8,6 +8,7 @@ from collections import OrderedDict
 from stubforge.dict_extras import ordered_dict_updated
 from stubforge.namespace import render_new_stub_schema
 from stubforge.stubforge_types import *
+from stubforge.helpers import dict_in_schema_list
 
 
 
@@ -40,42 +41,44 @@ test_dto = TypedDict("test_dto", {
 
 
 def _update_schema_list_from_list(
-    value: list, 
+    list_object: list, 
     schema_list: list[Schema], 
     parent_schema_name: SchemaName) -> tuple[list[Schema], SchemaFieldType]:
 
     type_names_in_list = []
     sub_dtos: int = 0
     
-    for obj in value:
-        type_name: str
-        if isinstance(obj, dict):
+    for item in list_object:
+        type_name: str 
+        if isinstance(item, dict):
             # BUG: dict is inheriting the name of the list
-            old_length = len(schema_list)
             # type_name = parent_schema_name + f"list_dto_{sub_dtos}"
-            type_name = parent_schema_name + f"list_dto"
-            schema_list = _update_schema_list_from_dict(obj, schema_list, type_name)
-            if len(schema_list) > old_length:
-                sub_dtos+=1
 
-        elif isinstance(obj, list):
-            schema_list, type_name = _update_schema_list_from_list(obj, schema_list, parent_schema_name=parent_schema_name)
+            if dict_in_schema_list(item, schema_list):
+                continue
+        
+            type_name = parent_schema_name + f"list_dto_{sub_dtos}"
+            schema_list = _update_schema_list_from_dict(item, schema_list, type_name)
+            sub_dtos+=1
+
+        elif isinstance(item, list):
+            schema_list, type_name = _update_schema_list_from_list(item, schema_list, parent_schema_name=parent_schema_name)
         
         else:
-            type_name = type(obj).__name__
+            type_name = type(item).__name__
         # TODO: add handle for nested lists   
 
         type_names_in_list.append(type_name)
 
     list_field_type: SchemaFieldType
+
+    # BUG: Lists that do not use built in types must be treated as a new object, like a schema, to prevent masking from the schema checker
     if len(type_names_in_list) == 0:
         list_field_type = f"None"
 
-
-    elif len(type_names_in_list) == 1:
-        list_field_type = f"list[{type_names_in_list[0]}]"
     elif all(t == type_names_in_list[0] for t in type_names_in_list):
         list_field_type = f"list[{type_names_in_list[0]}]"
+
     else:
         unique_types_names = list(set(type_names_in_list))
         unique_types_names.sort()
@@ -93,30 +96,22 @@ def _update_schema_list_from_list(
 
 
 def _update_schema_list_from_dict(
-    Dict: dict, 
+    dict_object: dict, 
     schema_list: list[Schema],
     schema_name: SchemaName) -> list[Schema]:
 
-    assert(isinstance(Dict, dict))
-
-    # may want to have a dict tracking schema entries
-    if not isinstance(Dict, dict) or Dict.keys() in [
-        fields.keys() for fields in [
-            schema["schema_fields_dict"] for schema in schema_list
-            ]
-        ]:
-        return schema_list
+    assert(isinstance(dict_object, dict))
 
     schema_fields_dict: SchemaFieldsDict = OrderedDict()
 
 
-    for key, value in Dict.items():
+    for key, value in dict_object.items():
 
 
         field_name: FieldName = str(key)
         schema_field_type: SchemaFieldType
 
-        if isinstance(value, dict):
+        if isinstance(value, dict) and not dict_in_schema_list(value, schema_list):
             schema_field_type = to_camel_case(key) + "_dto"
             schema_list = _update_schema_list_from_dict(value, schema_list, schema_field_type)
             # a new schema has been added to the list. The name of this schema is the field type of Dict[key]
