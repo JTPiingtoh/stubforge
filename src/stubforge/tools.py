@@ -8,7 +8,7 @@ import os
 from collections import OrderedDict
 from stubforge.namespace import render_new_stub_schema
 from stubforge.stubforge_types import *
-from stubforge.parsers import to_camel_case, render_schema_list
+from stubforge.parsers import to_camel_case, render_object_list
 
 StubSchemaMapping: TypeAlias = OrderedDict[Literal["stub", "schema_list"], Any]
 SigStubSchemaMapping: TypeAlias = OrderedDict[str, StubSchemaMapping] 
@@ -39,12 +39,10 @@ def stub_builder(
     # type_count = TypeCount()
     rendered_stub: str = ""
     
-
-    # schema_list = parse_object(result, schema_name, func_name)
-    # schema_name
+    
     try:
-        schema_list = render_schema_list(result, schema_name)
-        rendered_stub = f"def {func_name}{func_signiture} -> {schema_name}: ...\n"] # type: ignore [func-returns-value]
+        object_type_descriptor_dict = render_object_list(result, schema_name)
+        rendered_stub = f"def {func_name}{func_signiture} -> {schema_name}: ...\n" # type: ignore [func-returns-value]
 
     except RecursionError:
         raise RecursionError(f"Returned object from {func_name} is too nested.")
@@ -89,7 +87,7 @@ def stub_builder(
         func_sig = func.__name__ + str(inspect.signature(func).replace(return_annotation=inspect.Signature.empty))
 
 
-        # TODO Replace this garbage with a strcmp on the JSON
+        # TODO Replace this. The 
         new_sig_stub_schema_mapping: SigStubSchemaMapping | None = render_new_stub_schema(
             ingot_f,
             func_sig,
@@ -98,11 +96,7 @@ def stub_builder(
         )
 
         if not new_sig_stub_schema_mapping:
-            return 
-
-        print(func_file_name)
-        print("passed")
-
+            return
 
         for f in [ingot_f, stub_f, typing_f]:
             f.truncate(0)

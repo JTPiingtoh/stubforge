@@ -24,3 +24,7 @@ class MutableString:
     def get_string(self):
         return self.data
 
+
+RenderedObjectDescriptor: TypeAlias = str
+ObjectTypeName: TypeAlias = str
+ObjectTypeDespcritorDict: TypeAlias =dict[RenderedObjectDescriptor, ObjectTypeName]

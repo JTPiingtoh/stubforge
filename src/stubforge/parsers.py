@@ -3,6 +3,7 @@ from typing import Callable, Any, TypeAlias, Literal, TypedDict, assert_type
 import inspect
 import json
 
+from dataclasses import dataclass
 from collections import OrderedDict
 from stubforge.dict_extras import ordered_dict_updated
 from stubforge.namespace import render_new_stub_schema
@@ -36,6 +37,10 @@ test_dto = TypedDict("test_dto", {
    "details" : details_dto,
 })
 '''
+
+
+
+
 def _update_schema_list_from_list(
     value: list, 
     schema_list: list[Schema], 
@@ -67,11 +72,22 @@ def _update_schema_list_from_list(
         mutable_field_type.set_string(f"list[{" | ".join( unique_types_names )}]")
 
 
+
+# if dict:
+    # if keys already used:
+        # return
+    # parse dict
+    # render description 
+
+
 def _update_schema_list_from_dict(
     Dict: dict, 
-    schema_list: list[Schema]) -> list[Schema]:
+    schema_list: list[Schema],
+    schema_name: SchemaName) -> list[Schema]:
 
+    assert(isinstance(Dict, dict))
 
+    # may want to have a dict tracking schema entries
     if not isinstance(Dict, dict) or Dict.keys() in [
         fields.keys() for fields in [
             schema["schema_fields_dict"] for schema in schema_list
@@ -79,9 +95,9 @@ def _update_schema_list_from_dict(
         ]:
         return schema_list
 
-    # build a list containing names and types of this dict
-    schema_fields_dict: OrderedDict[SchemaName, SchemaFieldType] = OrderedDict()
     updated_schema_list: list[Schema] = []
+    schema_fields_dict: SchemaFieldsDict = OrderedDict{}
+
 
     for key, value in Dict.items():
 
@@ -89,34 +105,37 @@ def _update_schema_list_from_dict(
         schema_field_type: SchemaFieldType
 
         if isinstance(value, dict):
-            updated_schema_list = _update_schema_list_from_dict(value, schema_list)
-            # a new schema has been added to the list. The name of this schema is the field type of Dict[key]
             schema_field_type = to_camel_case(key) + "_dto"
+            updated_schema_list = _update_schema_list_from_dict(value, schema_list, schema_field_type)
+            # a new schema has been added to the list. The name of this schema is the field type of Dict[key]
 
         elif isinstance(value, list):
-            updated_schema_list = _update_schema_list_from_list(value, schema_list, to_camel_case(key) + "_dto")
+            schema_field_type = to_camel_case(key) + "_dto"
+            updated_schema_list = _update_schema_list_from_list(value, schema_list, schema_field_type)
 
         else:
             schema_field_type = type(value).__name__
+            return schema_list
 
         schema_fields_dict[field_name] = schema_field_type
 
-    # schema_name += "_dto"
-    updated_schema_list.append({"schema_name" : f"{schema_name}", "schema_fields_dict" : schema_fields_dict})
+    if updated_schema_list:
+        updated_schema_list.append({"schema_name" : f"{schema_name}",  "schema_fields_dict" : {schema_fields_dict}})
     
 
     return updated_schema_list
     
 
-def render_schema_list(object: Any, object_name: SchemaName) -> list[Schema]:
+def render_object_list(primary_object: Any, object_name: ObjectTypeName) -> ObjectTypeDespcritorDict:
 
-    schema_list: list[Schema] = []
+    schema_list : list[Schema] = []
+
 
     if isinstance(object, dict):
-        schema_list = _update_schema_list_from_dict(object, schema_list, object_name  + "_dto")
+        schema_list = _update_schema_list_from_dict(primary_object, schema_list, object_name)
 
     elif isinstance(object, list):
-        schema_list = _update_schema_list_from_list(object, schema_list, object_name  + "_dto")
+        schema_list = _update_schema_list_from_list(primary_object, schema_list, object_name)
 
     return schema_list
     
