@@ -31,13 +31,14 @@ test_dto = TypedDict("test_dto", {
 def _update_schema_list_from_list(
     list_object: list, 
     schema_list: list[Schema], 
-    parent_object_name: SchemaName) -> tuple[list[Schema], SchemaFieldType]:
+    parent_object_name: SchemaName
+    ) -> tuple[list[Schema], SchemaFieldType]:
 
     type_names_in_list = []
     sub_dtos: int = 0
     
     for item in list_object:
-        print(item)
+        
         type_name: str | None
 
         if isinstance(item, dict) and (type_name := retrieve_schema_name_from_schema_list(item, schema_list)):
@@ -79,23 +80,28 @@ def _update_schema_list_from_list(
 def _update_schema_list_from_dict(
     dict_object: dict, 
     schema_list: list[Schema],
-    object_name: SchemaName) -> list[Schema]:
+    object_name: SchemaName,
+    settings: Settings
+    ) -> list[Schema]:
 
     assert(isinstance(dict_object, dict))
 
     schema_fields_dict: SchemaFieldsDict = OrderedDict()
+
 
     for key, value in dict_object.items():
 
         field_name: FieldName = str(key)
         schema_field_type: SchemaFieldType | None
 
+        # if settings.trust_JSON_consistency = DO_TRUST_JSON
+        # schema_retriever
         if isinstance(value, dict) and (schema_field_type := retrieve_schema_name_from_schema_list(value, schema_list)):
             pass
 
         elif isinstance(value, dict):
             schema_field_type = to_camel_case(key) + "_dto"
-            schema_list = _update_schema_list_from_dict(value, schema_list, schema_field_type)
+            schema_list = _update_schema_list_from_dict(value, schema_list, schema_field_type, settings)
 
         elif isinstance(value, list):
             schema_list, schema_field_type = _update_schema_list_from_list(value, schema_list, parent_object_name=field_name)
@@ -112,12 +118,20 @@ def _update_schema_list_from_dict(
     return schema_list
     
 
-def render_object_list(primary_object: Any, object_name: ObjectTypeName) -> list[Schema] | None:
+def render_object_list(
+        primary_object: Any, 
+        object_name: SchemaName, 
+        settings: Settings = Settings(
+            DO_NOT_TRUST_JSON_CONSISTENCY, 
+            DEFAULT_MAX_RECURSION_DEPTH, 
+            DO_FORCE_REWRITE
+            )
+        ) -> list[Schema] | None:
 
     schema_list : list[Schema] = []
 
     if isinstance(primary_object, dict):
-        schema_list = _update_schema_list_from_dict(primary_object, schema_list, object_name)
+        schema_list = _update_schema_list_from_dict(primary_object, schema_list, object_name, settings)
         return schema_list
 
     elif isinstance(primary_object, list):
