@@ -1,5 +1,7 @@
 from typing import Any
 from collections import OrderedDict
+
+# TODO: Update with 3.16 Sentinal object
 _sentinal = object()
 
 def ordered_dict_updated(d: OrderedDict, key: Any, value: Any) -> bool:

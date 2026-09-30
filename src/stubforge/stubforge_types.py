@@ -1,18 +1,35 @@
 from collections import OrderedDict
-from typing import TypeAlias, TypedDict
+from typing import TypeAlias, TypedDict, Any
 from dataclasses import dataclass
 from enum import Enum
 
 # The name of a schema
 SchemaName: TypeAlias = str
 
-FieldName: TypeAlias = str
+SchemaFieldName: TypeAlias = str
 SchemaFieldType: TypeAlias = str
 
 # The fields and types of a schema, stored in a dict
-SchemaFieldsDict: TypeAlias = OrderedDict[FieldName, SchemaFieldType]
+# TODO:
+# This can be replaced with SchemaField dataclass once policy pattern has been implemented
+SchemaFieldsDict: TypeAlias = OrderedDict[SchemaFieldName, SchemaFieldType]
 
 # An object that contains the name of the schema, and its fields 
+
+@dataclass
+class SchemaField:
+    schema_field_name: SchemaFieldName
+    schema_field_type: SchemaFieldType | None
+
+    @property
+    def finalised(self):
+        return self.schema_field_name and self.schema_field_type
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if self.finalised:
+            raise ValueError("This schema field has been finalised")
+        setattr(self, name, value)
+
 class Schema(TypedDict):
     schema_name: SchemaName
     schema_fields_dict: SchemaFieldsDict
