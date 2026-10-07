@@ -1,14 +1,9 @@
-from inspect import signature
-from typing import Callable, Any, TypeAlias, Literal, TypedDict, assert_type
-import inspect
-import json
+from typing import Any
+from functools import wraps
 
-from dataclasses import dataclass
 from collections import OrderedDict
-from stubforge.dict_extras import ordered_dict_updated
-from stubforge.namespace import render_new_stub_schema
 from stubforge.stubforge_types import *
-from stubforge.helpers import retrieve_schema_name_from_schema_list, to_camel_case
+from stubforge.helpers import retrieve_schema_name_from_schema_list_on_keys, to_camel_case
 
 
 '''
@@ -28,6 +23,46 @@ test_dto = TypedDict("test_dto", {
 })
 '''
 
+
+
+# trust consistency
+def try_type_retrieval(
+    d: dict,
+    schema_field: SchemaFieldName| None,
+    schema_list: list[Schema]
+) -> tuple[list[Schema], SchemaFieldName | None]:
+
+    if retrived_name := retrieve_schema_name_from_schema_list_on_keys(d, schema_list):
+        schema_field = retrived_name
+
+    return schema_list, schema_field
+
+def try_sceptical_parse(
+    d: dict,
+    schema_field: SchemaFieldName| None,
+    schema_list: list[Schema]
+) -> tuple[list[Schema], SchemaFieldName | None]:
+    pass
+
+
+def try_sceptical_parse_and_raise_inconsistency(
+    d: dict,
+    schema_field: SchemaFieldName| None,
+    schema_list: list[Schema]
+) -> tuple[list[Schema], SchemaFieldName | None]:
+    pass
+
+
+def parse_homogenous_list():
+    pass
+
+def parse_heterogeneous_list():
+    pass
+
+def parse_heterogeneous_list_and_raise_hetero():
+    pass
+
+
 def _update_schema_list_from_list(
     list_object: list, 
     schema_list: list[Schema], 
@@ -41,7 +76,7 @@ def _update_schema_list_from_list(
         
         type_name: str | None
 
-        if isinstance(item, dict) and (type_name := retrieve_schema_name_from_schema_list(item, schema_list)):
+        if isinstance(item, dict) and (type_name := retrieve_schema_name_from_schema_list_on_keys(item, schema_list)):
             pass
                 
         elif isinstance(item, dict):
@@ -90,17 +125,16 @@ def _update_schema_list_from_dict(
 
 
     for key, value in dict_object.items():
-
         field_name: SchemaFieldName = str(key)
+
+        # write policies in to THIS file, include to tools. pass as list, policies will also take policy list/ composed list as arg
+
         schema_field_type: SchemaFieldType | None
+        # Check whether consistency is trusted. If it is, retrive the field type if already seen, else par
+        if settings.trust_keyvalue_consistency and isinstance(value, dict) and (retrieved_schema_name := retrieve_schema_name_from_schema_list_on_keys(value, schema_list)):
+            schema_field_type = retrieved_schema_name
 
-        # if settings.trust_JSON_consistency = DO_TRUST_JSON
-        # schema_retriever
-
-        # TODO: turn this into a policy pattern
-        if isinstance(value, dict) and (schema_field_type := retrieve_schema_name_from_schema_list(value, schema_list)):
-            pass
-
+        
         elif isinstance(value, dict):
             schema_field_type = to_camel_case(key) + "_dto"
             schema_list = _update_schema_list_from_dict(value, schema_list, schema_field_type, settings)
@@ -110,7 +144,7 @@ def _update_schema_list_from_dict(
 
         else:
             schema_field_type = type(value).__name__
-            
+        
             
         schema_fields_dict[field_name] = schema_field_type
 
@@ -121,20 +155,21 @@ def _update_schema_list_from_dict(
     return schema_list
     
 
+
 def render_object_list(
-        primary_object: Any, 
-        object_name: SchemaName, 
-        settings: Settings = Settings(
-            DO_NOT_TRUST_JSON_CONSISTENCY, 
-            DEFAULT_MAX_RECURSION_DEPTH, 
-            DO_FORCE_REWRITE
-            )
+    primary_object: Any, 
+    object_name: SchemaName, 
+    probe_settings: Settings = Settings(
+        DO_NOT_TRUST_JSON_KEY_VALUE_CONSISTENCY, 
+        DEFAULT_MAX_RECURSION_DEPTH, 
+        DO_FORCE_REWRITE
+        )
         ) -> list[Schema] | None:
 
     schema_list : list[Schema] = []
 
     if isinstance(primary_object, dict):
-        schema_list = _update_schema_list_from_dict(primary_object, schema_list, object_name, settings)
+        schema_list = _update_schema_list_from_dict(primary_object, schema_list, object_name, probe_settings)
         return schema_list
 
     elif isinstance(primary_object, list):

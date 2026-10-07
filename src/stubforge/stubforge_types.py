@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import TypeAlias, TypedDict, Any
+from typing import TypeAlias, TypedDict, Any, Callable
 from dataclasses import dataclass
 from enum import Enum
 
@@ -16,38 +16,40 @@ SchemaFieldsDict: TypeAlias = OrderedDict[SchemaFieldName, SchemaFieldType]
 
 # An object that contains the name of the schema, and its fields 
 
-@dataclass
 class SchemaField:
-    schema_field_name: SchemaFieldName
-    schema_field_type: SchemaFieldType | None
+
+
+    def __init__(self, name) -> None:
+        self.name: SchemaFieldType = name
+        self._type: SchemaFieldType | object = None
 
     @property
-    def finalised(self):
-        return self.schema_field_name and self.schema_field_type
+    def type(self):
+        return self._type
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        if self.finalised:
-            raise ValueError("This schema field has been finalised")
-        setattr(self, name, value)
+    @type.setter
+    def type(self, value):
+        if not self.type == None:
+            raise ValueError("Type has already been set for this field") 
+
+        self._type = value
+
+    @property
+    def finalised(self) -> bool:
+        return not self.type == None
+
 
 class Schema(TypedDict):
     schema_name: SchemaName
     schema_fields_dict: SchemaFieldsDict
 
-class MutableString:
-    def __init__(self, s: str):
-        self.data = s
-    def set_string(self, s):
-        self.data = s
-    def get_string(self):
-        return self.data
 
 
-DO_TRUST_JSON_CONSISTENCY = True
+DO_TRUST_KEYVALUE_CONSISTENCY = True
 '''
     Tell stubforge to assume the value type of any any field value pair will always be consistent. 
 '''
-DO_NOT_TRUST_JSON_CONSISTENCY = not DO_TRUST_JSON_CONSISTENCY
+DO_NOT_TRUST_JSON_KEY_VALUE_CONSISTENCY = not DO_TRUST_KEYVALUE_CONSISTENCY
 '''
     Tell stubforge to not assume the value type of any any field value pair will always be consistent. 
 '''
@@ -58,31 +60,35 @@ DO_FORCE_REWRITE = True
 '''
 DO_NOT_FORCE_REWRITE = not DO_FORCE_REWRITE
 
-DO_RAISE_JSON_INCONSISTENCY_WARNING: bool = True
-DO_NOT_RAISE_JSON_INCONSISTENCY_WARNING: bool = not DO_RAISE_JSON_INCONSISTENCY_WARNING 
+DO_RAISE_KEYVALUE_INCONSISTENCY_WARNING: bool = True
+DO_NOT_RAISE_KEYVALUE_INCONSISTENCY_WARNING: bool = not DO_RAISE_KEYVALUE_INCONSISTENCY_WARNING 
 
-@dataclass
+DO_TRUST_LIST_HOMOGENEITY: bool = True
+DO_NOT_TRUST_LIST_HOMOGENEITY: bool = not DO_TRUST_LIST_HOMOGENEITY
 
 @dataclass
 class Settings:
     '''
     Object containing user settings for stubforge
     '''
-    trust_JSON_consistency: bool = DO_NOT_TRUST_JSON_CONSISTENCY
-    _raise_JSON_inconsistency = False
+    trust_keyvalue_consistency: bool = DO_NOT_TRUST_JSON_KEY_VALUE_CONSISTENCY
     max_recursion_depth: int = DEFAULT_MAX_RECURSION_DEPTH 
     force_rewrite: bool = DO_FORCE_REWRITE
+    trust_list_homogeneity: bool = DO_TRUST_LIST_HOMOGENEITY
+
+    _raise_keyvalue_inconsistency = False
 
     @property
-    def raise_JSON_inconsistency(self):
-        return self._raise_JSON_inconsistency
+    def raise_keyvalue_inconsistency(self):
+        return self._raise_keyvalue_inconsistency
 
-    @raise_JSON_inconsistency.setter
-    def raise_JSON_inconsistency(self, value):
-        if self.trust_JSON_consistency == DO_TRUST_JSON_CONSISTENCY:
+    @raise_keyvalue_inconsistency.setter
+    def raise_keyvalue_inconsistency(self, value):
+        if self.trust_keyvalue_consistency == DO_TRUST_KEYVALUE_CONSISTENCY:
             raise AttributeError("Cannot raise inconsistency warning if consitency is trusted")
-        self._raise_JSON_inconsistency: bool = value
+        self._raise_keyvalue_inconsistency: bool = value
 
     
 
+        
 
