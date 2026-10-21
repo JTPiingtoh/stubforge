@@ -1,20 +1,26 @@
 from stubforge.stubforge_types import *
 
-def dict_in_schema_list(dict_object: dict, schema_list: list[Schema]) -> bool:
-    
-    return dict_object.keys() in [
-        schema_fields_dict.keys() for schema_fields_dict in [
-            schema["schema_fields_dict"] for schema in schema_list
-            ]
-        ]
 
-def retrieve_schema_name_from_schema_list_on_keys(dict_object: dict, schema_list: list[Schema]) -> SchemaName | None:
- 
-    for schema in schema_list:
-        if dict_object.keys() in [schema["schema_fields_dict"].keys()]:
-            return schema["schema_name"]
+# def dict_in_schema_list(dict_object: dict, schema_list: list[Schema]) -> bool:
+    
+#     return dict_object.keys() in [
+#         schema_fields_dict.keys() for schema_fields_dict in [
+#             schema["schema_fields_dict"] for schema in schema_list
+#             ]
+#         ]
+
+def retrieve_dto_name_from_dto_index_on_keys(dict_object: dict, object_index: ObjectTypeIndex) -> DTOName | None:
+
+    if retrieved_name := object_index[
+            sorted(
+                    list(dict_object.keys())
+                )
+        ][DTONameIndex]:
+        return retrieved_name
 
     return None
+
+
 
  
 

@@ -34,10 +34,13 @@ def stub_builder(
     # Store the types found in the result
     
     func_name: str = func.__name__
-    schema_name: SchemaName = to_camel_case(func_name) + "_dto"
+    schema_name: DTOName = to_camel_case(func_name) + "_dto"
     func_signiture = signature(func)
     rendered_stub: str = ""
     schema_list: list[Schema] | None
+    schema_index: OrderedDict
+
+    
     
     try:
         schema_list = render_object_list(result, schema_name)

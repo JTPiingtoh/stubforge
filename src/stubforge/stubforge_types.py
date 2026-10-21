@@ -3,16 +3,25 @@ from typing import TypeAlias, TypedDict, Any, Callable
 from dataclasses import dataclass
 from enum import Enum
 
-# The name of a schema
-SchemaName: TypeAlias = str
+# The name of a DTO
+DTOName: TypeAlias = str
 
-SchemaFieldName: TypeAlias = str
-SchemaFieldType: TypeAlias = str
+DictKeyName: TypeAlias = str
+DictValueType: TypeAlias = str
 
 # The fields and types of a schema, stored in a dict
 # TODO:
 # This can be replaced with SchemaField dataclass once policy pattern has been implemented
-SchemaFieldsDict: TypeAlias = OrderedDict[SchemaFieldName, SchemaFieldType]
+SchemaFieldsDict: TypeAlias = OrderedDict[DictKeyName, DictValueType]
+
+DictFields: TypeAlias = list[DictKeyName]
+DictValueTypes: TypeAlias = list[DictValueType]
+
+
+DTONameIndex = 0
+DictValueTypesIndex = 1
+
+ObjectTypeIndex: TypeAlias = OrderedDict[DictFields, tuple[DTOName, DictValueTypes]]
 
 # An object that contains the name of the schema, and its fields 
 
@@ -20,8 +29,8 @@ class SchemaField:
 
 
     def __init__(self, name) -> None:
-        self.name: SchemaFieldType = name
-        self._type: SchemaFieldType | object = None
+        self.name: DictValueType = name
+        self._type: DictValueType | object = None
 
     @property
     def type(self):
@@ -42,6 +51,12 @@ class SchemaField:
 class Schema(TypedDict):
     schema_name: SchemaName
     schema_fields_dict: SchemaFieldsDict
+
+
+DictProbePolicy: TypeAlias = Callable[
+    [object, str, DictKeyName, ObjectTypeIndex],
+    tuple[ObjectTypeIndex, DictValueType | None],
+]
 
 
 
@@ -66,27 +81,7 @@ DO_NOT_RAISE_KEYVALUE_INCONSISTENCY_WARNING: bool = not DO_RAISE_KEYVALUE_INCONS
 DO_TRUST_LIST_HOMOGENEITY: bool = True
 DO_NOT_TRUST_LIST_HOMOGENEITY: bool = not DO_TRUST_LIST_HOMOGENEITY
 
-@dataclass
-class Settings:
-    '''
-    Object containing user settings for stubforge
-    '''
-    trust_keyvalue_consistency: bool = DO_NOT_TRUST_JSON_KEY_VALUE_CONSISTENCY
-    max_recursion_depth: int = DEFAULT_MAX_RECURSION_DEPTH 
-    force_rewrite: bool = DO_FORCE_REWRITE
-    trust_list_homogeneity: bool = DO_TRUST_LIST_HOMOGENEITY
 
-    _raise_keyvalue_inconsistency = False
-
-    @property
-    def raise_keyvalue_inconsistency(self):
-        return self._raise_keyvalue_inconsistency
-
-    @raise_keyvalue_inconsistency.setter
-    def raise_keyvalue_inconsistency(self, value):
-        if self.trust_keyvalue_consistency == DO_TRUST_KEYVALUE_CONSISTENCY:
-            raise AttributeError("Cannot raise inconsistency warning if consitency is trusted")
-        self._raise_keyvalue_inconsistency: bool = value
 
     
 
