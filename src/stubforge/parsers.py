@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 from functools import wraps
 
 from collections import OrderedDict
@@ -28,8 +28,7 @@ test_dto = TypedDict("test_dto", {
 # trust consistency
 def try_type_retrieval(
     o: object,
-    object_key: str,
-    object_name: DictKeyName,
+    object_name: DictKey,
     object_index: ObjectTypeIndex
 ) -> tuple[ObjectTypeIndex, DictValueType | None]:
 
@@ -50,8 +49,7 @@ def try_type_retrieval(
     
 def try_probe_dict_in_dict(
     o: object,
-    object_key: str,
-    object_name: DictKeyName,
+    object_name: DictKey,
     object_index: ObjectTypeIndex
 ) -> tuple[ObjectTypeIndex, DictValueType | None]:
 
@@ -60,7 +58,7 @@ def try_probe_dict_in_dict(
 
     assert(isinstance(o, dict))
     
-    dict_value_type: DictValueType = to_camel_case(object_key) + "_dto"
+    dict_value_type: DictValueType = to_camel_case(object_name) + "_dto"
 
     # remove settings
     return _update_object_index_from_dict(o, object_index, dict_value_type), dict_value_type
@@ -68,8 +66,7 @@ def try_probe_dict_in_dict(
 
 def try_probe_list_in_dict(
     o: object,
-    object_key: str,
-    object_name: DictKeyName,
+    object_name: DictKey,
     object_index: ObjectTypeIndex
 ) -> tuple[ObjectTypeIndex, DictValueType | None]:
 
@@ -83,8 +80,7 @@ def try_probe_list_in_dict(
 
 def default_object_type_from_object_in_dict(
     o: object,
-    object_key: str,
-    object_name: DictKeyName,
+    object_name: DictKey,
     object_index: ObjectTypeIndex
 ) -> tuple[ObjectTypeIndex, DictValueType | None]:
 
@@ -171,47 +167,31 @@ def _update_object_index_from_dict(
 
     assert(isinstance(dict_object, dict))
 
-    schema_fields_dict: SchemaFieldsDict = OrderedDict()
-
-    
-
-    for key, value in dict_object.items():
-        dto_name: DictKeyName = str(key)
-
-        # write policies in to THIS file, include to tools. pass as list, policies will also take policy list/ composed list as arg
-
-        dict_value_type: DictValueType | None
-        # Check whether consistency is trusted. If it is, retrive the field type if already seen, else par
-        if settings.trust_keyvalue_consistency and isinstance(value, dict) and (retrieved_value_type := retrieve_dto_name_from_dto_index_on_keys(value, object_index)):
-            dict_value_type = retrieved_value_type
-
-        
-        elif isinstance(value, dict):
-            dict_value_type = to_camel_case(key) + "_dto"
-            object_index = _update_schema_list_from_dict(value, object_index, dict_value_type, settings)
-
-        elif isinstance(value, list):
-            object_index, dict_value_type = _update_schema_list_from_list(value, object_index, parent_object_name=dto_name)
-
-        else:
-            dict_value_type = type(value).__name__
-        
-        schema_fields_dict[dto_name] = dict_value_type
-
+    dict_value_types = []
 
     for key, value in dict_object.items():
 
-        dto_name: DictKeyName = str(key)
-        dict_value_type: DictValueType | None
-
-        for policy in settings.dict_probe_policies:
-            object_index, dict_value_type = policy(value, dto_name)
+        dto_name: DTOName = str(key)
+        dict_value_type: DictValueType | None = None
 
 
-    # todo: change schema
-    new_schema: Schema = {"schema_name" : object_name, "schema_fields_dict" : schema_fields_dict}
-    object_index.append(new_schema)    
+        for probe_policy in settings.dict_probe_policies:
+            object_index, dict_value_type = probe_policy(value, key, object_index)
 
+            if dict_value_type != None:
+                break
+
+        if not dict_value_type:
+            raise ValueError(f"Probe failed to determine value type of {key} : {value}")
+
+        # add to index
+        dict_value_types.append(dict_value_type)
+
+    dict_fields: DictFields = tuple(dict_object.keys())
+    dict_value_types = tuple(dict_value_types)
+    object_index[ dict_fields ] = (object_name, dict_value_types)
+
+      
     return object_index
     
 
@@ -219,14 +199,14 @@ def _update_object_index_from_dict(
 def render_object_list(
     primary_object: Any, 
     object_name: DTOName, 
-    probe_settings: list[DictProbePolicy]
+    settings: Settings
     ) -> list[Schema] | None:
 
     object_index: ObjectTypeIndex = OrderedDict()
     object_list : list[Schema] = []
 
     if isinstance(primary_object, dict):
-        object_list = _update_schema_list_from_dict(primary_object, object_list, object_name, probe_settings)
+        object_index = _update_object_index_from_dict(primary_object, object_index, object_name, settings)
         return object_list
 
     elif isinstance(primary_object, list):

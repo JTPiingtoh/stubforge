@@ -6,22 +6,23 @@ from enum import Enum
 # The name of a DTO
 DTOName: TypeAlias = str
 
-DictKeyName: TypeAlias = str
+DictKey: TypeAlias = str
 DictValueType: TypeAlias = str
 
 # The fields and types of a schema, stored in a dict
 # TODO:
 # This can be replaced with SchemaField dataclass once policy pattern has been implemented
-SchemaFieldsDict: TypeAlias = OrderedDict[DictKeyName, DictValueType]
+SchemaFieldsDict: TypeAlias = OrderedDict[DictKey, DictValueType]
 
-DictFields: TypeAlias = list[DictKeyName]
-DictValueTypes: TypeAlias = list[DictValueType]
+DictFields: TypeAlias = tuple[DictKey]
+DictValueTypes: TypeAlias = tuple[DictValueType]
 
 
 DTONameIndex = 0
-DictValueTypesIndex = 1
+DictValueTypeIndex = 1
 
 ObjectTypeIndex: TypeAlias = OrderedDict[DictFields, tuple[DTOName, DictValueTypes]]
+
 
 # An object that contains the name of the schema, and its fields 
 
@@ -54,7 +55,7 @@ class Schema(TypedDict):
 
 
 DictProbePolicy: TypeAlias = Callable[
-    [object, str, DictKeyName, ObjectTypeIndex],
+    [object, DictKey, ObjectTypeIndex],
     tuple[ObjectTypeIndex, DictValueType | None],
 ]
 
