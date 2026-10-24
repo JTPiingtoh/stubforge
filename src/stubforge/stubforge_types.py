@@ -1,86 +1,35 @@
 from collections import OrderedDict
 from typing import TypeAlias, TypedDict, Any, Callable
 from dataclasses import dataclass
-from enum import Enum
+
+from stubforge.config import Settings
 
 # The name of a DTO
 DTOName: TypeAlias = str
-
 DictKey: TypeAlias = str
 DictValueType: TypeAlias = str
 
-# The fields and types of a schema, stored in a dict
-# TODO:
-# This can be replaced with SchemaField dataclass once policy pattern has been implemented
-SchemaFieldsDict: TypeAlias = OrderedDict[DictKey, DictValueType]
+# DictFields: TypeAlias = tuple[DictKey]
 
-DictFields: TypeAlias = tuple[DictKey]
 DictValueTypes: TypeAlias = tuple[DictValueType]
 
+@dataclass
+class DTOContainer:
+    dto_name: DTOName
+    dto_fields: DictFields
+    dto_field_types: DictValueTypes
 
-DTONameIndex = 0
-DictValueTypeIndex = 1
-
-ObjectTypeIndex: TypeAlias = OrderedDict[DictFields, tuple[DTOName, DictValueTypes]]
-
-
-# An object that contains the name of the schema, and its fields 
-
-class SchemaField:
-
-
-    def __init__(self, name) -> None:
-        self.name: DictValueType = name
-        self._type: DictValueType | object = None
-
-    @property
-    def type(self):
-        return self._type
-
-    @type.setter
-    def type(self, value):
-        if not self.type == None:
-            raise ValueError("Type has already been set for this field") 
-
-        self._type = value
-
-    @property
-    def finalised(self) -> bool:
-        return not self.type == None
-
-
-class Schema(TypedDict):
-    schema_name: SchemaName
-    schema_fields_dict: SchemaFieldsDict
-
+ObjectTypeIndex: TypeAlias = OrderedDict[DictFields, DTOContainer]
 
 DictProbePolicy: TypeAlias = Callable[
-    [object, DictKey, ObjectTypeIndex],
+    [object, DictKey, ObjectTypeIndex, Settings],
     tuple[ObjectTypeIndex, DictValueType | None],
 ]
 
 
 
-DO_TRUST_KEYVALUE_CONSISTENCY = True
-'''
-    Tell stubforge to assume the value type of any any field value pair will always be consistent. 
-'''
-DO_NOT_TRUST_JSON_KEY_VALUE_CONSISTENCY = not DO_TRUST_KEYVALUE_CONSISTENCY
-'''
-    Tell stubforge to not assume the value type of any any field value pair will always be consistent. 
-'''
-DEFAULT_MAX_RECURSION_DEPTH = 30
-DO_FORCE_REWRITE = True
-'''
-    Force stubforge to always rewrite the Typing.py (or user named typing files) and *.pyi files.
-'''
-DO_NOT_FORCE_REWRITE = not DO_FORCE_REWRITE
 
-DO_RAISE_KEYVALUE_INCONSISTENCY_WARNING: bool = True
-DO_NOT_RAISE_KEYVALUE_INCONSISTENCY_WARNING: bool = not DO_RAISE_KEYVALUE_INCONSISTENCY_WARNING 
-
-DO_TRUST_LIST_HOMOGENEITY: bool = True
-DO_NOT_TRUST_LIST_HOMOGENEITY: bool = not DO_TRUST_LIST_HOMOGENEITY
+_sentinel = object()
 
 
 
