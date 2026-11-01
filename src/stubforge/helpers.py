@@ -9,7 +9,7 @@ from stubforge.stubforge_types import *
 #             ]
 #         ]
 
-def sorted_dict_keys(d: dict) -> tuple[str, ...]:
+def sorted_dict_keys(d: dict) -> tuple[DictKey, ...]:
 
     keys: list[str] = [str(key) for key in d.keys()]
 
@@ -18,12 +18,16 @@ def sorted_dict_keys(d: dict) -> tuple[str, ...]:
 
 def retrieve_dto_name_from_dto_index_on_keys(dict_object: dict, object_index: ObjectTypeIndex) -> DTOName | None:
 
-    if retrieved_name := object_index[sorted_dict_keys].dto_name:
-        return retrieved_name
+    keys = sorted_dict_keys(dict_object)
 
-    return None
+    retrieved_name: DTOName | None = None
 
+    try:
+        retrieved_name = object_index[keys].dto_name
+    except:
+        pass
 
+    return retrieved_name
 
 
  

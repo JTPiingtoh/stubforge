@@ -9,7 +9,7 @@ DTOName: TypeAlias = str
 DictKey: TypeAlias = str
 DictValueType: TypeAlias = str
 
-# DictFields: TypeAlias = tuple[DictKey]
+DictFields: TypeAlias = tuple[DictKey, ...]
 
 DictValueTypes: TypeAlias = tuple[DictValueType]
 

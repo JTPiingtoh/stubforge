@@ -8,14 +8,15 @@ import os
 from collections import OrderedDict
 from stubforge.namespace import render_new_stub_schema
 from stubforge.stubforge_types import *
-from stubforge.parsers import to_camel_case, render_object_list
+from stubforge.parsers import to_camel_case, populate_object_index
+from stubforge.dict_probe_policies import DEFUALT_DICT_PROBE_POLICIES
 
 StubSchemaMapping: TypeAlias = OrderedDict[Literal["stub", "schema_list"], Any]
 SigStubSchemaMapping: TypeAlias = OrderedDict[str, StubSchemaMapping] 
 
 # TODO: re-write this fucking mess
 def stub_builder(
-    func: Callable[[], dict | list], 
+    func: Callable[[], dict | list | Any], 
     typing_file_name: str | None = None
     ) -> None:
     '''
@@ -36,16 +37,22 @@ def stub_builder(
     func_name: str = func.__name__
     schema_name: DTOName = to_camel_case(func_name) + "_dto"
     func_signiture = signature(func)
-    rendered_stub: str = ""
-    schema_list: list[Schema] | None
-    schema_index: OrderedDict
 
-    
+    rendered_stub: str = ""
+    schema_index: OrderedDict | None
+
+    settings = Settings(
+        trust_keyvalue_consistency=True,
+        max_recursion_depth=30,
+        force_rewrite=True,
+        trust_list_homogeneity=True,
+        dict_probe_policies=DEFUALT_DICT_PROBE_POLICIES
+    )
     
     try:
-        schema_list = render_object_list(result, schema_name)
+        schema_index = populate_object_index(result, schema_name, settings)
 
-        if schema_list:
+        if schema_index:
             rendered_stub = f"def {func_name}{func_signiture} -> {schema_name}: ...\n" # type: ignore [func-returns-value]
 
         else:

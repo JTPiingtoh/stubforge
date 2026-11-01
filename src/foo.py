@@ -1,8 +1,12 @@
+import json
 
-dict = {}
+
+dict1 = {}
 
 
-dict[(1,2)] = 2
+dict1[1,2,3] = 2
 
-tuple([1,2,3])
-print(dict.keys())
+print(dict1)
+
+
+print(json.dumps(dict1))

@@ -79,7 +79,6 @@ def render_new_stub_schema(
             return None
 
     read_func_stub_schema: SigStubSchemaMapping | None = read_stubs_schema_from_json()
-
     new_stub_schema: StubSchemaMapping | None = None
     new_func_stub_schema: SigStubSchemaMapping | None = None
     
