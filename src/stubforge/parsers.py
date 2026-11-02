@@ -113,7 +113,7 @@ def _update_object_index_from_dict(
 
     dto_container = DTOContainer(
         dto_name=object_name,
-        dto_fields=dict_fields,
+        dto_field_names=dict_fields,
         dto_field_types=dict_value_types
     )
 
@@ -122,13 +122,12 @@ def _update_object_index_from_dict(
     return object_index
     
 
-def populate_object_index( 
+def update_object_index( 
     primary_object: Any, 
     object_name: DTOName, 
+    object_index: ObjectTypeIndex,
     settings: Settings
-    ) -> ObjectTypeIndex | None:
-
-    object_index: ObjectTypeIndex = OrderedDict()
+    ) -> ObjectTypeIndex:
     
     if isinstance(primary_object, dict):
         object_index = _update_object_index_from_dict(primary_object, object_index, object_name, settings)
@@ -138,6 +137,6 @@ def populate_object_index(
         object_index, _ = _update_object_index_from_list(primary_object, object_index, object_name, settings)
         return object_index
 
-    return None
+    return object_index
 
     

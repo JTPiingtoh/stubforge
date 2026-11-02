@@ -1,13 +1,13 @@
 from stubforge.stubforge_types import *
 
 
-# def dict_in_schema_list(dict_object: dict, schema_list: list[Schema]) -> bool:
-    
-#     return dict_object.keys() in [
-#         schema_fields_dict.keys() for schema_fields_dict in [
-#             schema["schema_fields_dict"] for schema in schema_list
-#             ]
-#         ]
+def to_camel_case(text: str) -> str:
+        s = text.replace("-", " ").replace("_", " ")
+        s = s.split()
+        if len(text) == 0:
+            return text
+        return s[0] + ''.join(i.capitalize() for i in s[1:])
+
 
 def sorted_dict_keys(d: dict) -> tuple[DictKey, ...]:
 
@@ -29,15 +29,29 @@ def retrieve_dto_name_from_dto_index_on_keys(dict_object: dict, object_index: Ob
 
     return retrieved_name
 
-
  
+def convert_index_to_list(index: ObjectTypeIndex) -> list[DTOContainer]:
+    return [cont for cont in index.values()]
 
-# Source - https://stackoverflow.com/a/60978847
-# Posted by JoshDaBosh, modified by community. See post 'Timeline' for change history
-# Retrieved 2026-04-25, License - CC BY-SA 4.0
-def to_camel_case(text: str) -> str:
-        s = text.replace("-", " ").replace("_", " ")
-        s = s.split()
-        if len(text) == 0:
-            return text
-        return s[0] + ''.join(i.capitalize() for i in s[1:])
+    
+def convert_list_to_index(containers: list[DTOContainer]) -> ObjectTypeIndex:
+    index: ObjectTypeIndex = OrderedDict()
+
+    for container in containers:
+        index[container.dto_field_names] = container
+
+    return index
+
+
+def render_typing_py(object_list: list[DTOContainer], func_name: str) -> str:
+
+    typing_py = f"from typing import TypedDict\n\n# Objects for the function {func_name}\n\n"
+    for o in object_list:
+        typing_py += f'{o.dto_name} = TypedDict("{o.dto_name}", {{\n'
+
+        for field_name, field_type in o.dto_fields:
+            typing_py += f'"{field_name} : {field_type},\n'
+
+            typing_py += "})\n\n"
+
+    return typing_py

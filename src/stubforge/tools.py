@@ -6,18 +6,18 @@ import pathlib
 import os
 
 from collections import OrderedDict
-from stubforge.namespace import render_new_stub_schema
 from stubforge.stubforge_types import *
-from stubforge.parsers import to_camel_case, populate_object_index
+from stubforge.parsers import update_object_index
 from stubforge.dict_probe_policies import DEFUALT_DICT_PROBE_POLICIES
+from stubforge.helpers import *
 
-StubSchemaMapping: TypeAlias = OrderedDict[Literal["stub", "schema_list"], Any]
-SigStubSchemaMapping: TypeAlias = OrderedDict[str, StubSchemaMapping] 
+
 
 # TODO: re-write this fucking mess
 def stub_builder(
     func: Callable[[], dict | list | Any], 
-    typing_file_name: str | None = None
+    typing_file_name: str | None = None,
+    stub_file_name: str | None = None
     ) -> None:
     '''
     Takes a function that returns a dict or list object, and builds a stub to be inserted into
@@ -31,118 +31,89 @@ def stub_builder(
     if not isinstance(result, (dict, list)):
         raise ValueError(f"{func} does not appear to return a json object")
     
-    
-    # Store the types found in the result
-    
     func_name: str = func.__name__
-    schema_name: DTOName = to_camel_case(func_name) + "_dto"
+    object_name: DTOName = to_camel_case(func_name) + "_dto"
     func_signiture = signature(func)
 
-    rendered_stub: str = ""
-    schema_index: OrderedDict | None
-
-    settings = Settings(
-        trust_keyvalue_consistency=True,
-        max_recursion_depth=30,
-        force_rewrite=True,
-        trust_list_homogeneity=True,
-        dict_probe_policies=DEFUALT_DICT_PROBE_POLICIES
-    )
-    
-    try:
-        schema_index = populate_object_index(result, schema_name, settings)
-
-        if schema_index:
-            rendered_stub = f"def {func_name}{func_signiture} -> {schema_name}: ...\n" # type: ignore [func-returns-value]
-
-        else:
-            rendered_stub = f"def {func_name}{func_signiture} -> {type(result).__name__}: ...\n" # type: ignore [func-returns-value]
-
-
-    except RecursionError:
-        raise RecursionError(f"Returned object from {func_name} is too nested.")
-
-    # Load previous types and stubs (if any)
     func_file_path = inspect.getfile(func)
     func_file_name = func_file_path.split("\\")[-1]
     func_base_path = func_file_path.removesuffix(func_file_name)
+    
+    if not stub_file_name:
+        stub_file_name = func_file_name
     stub_file_path = pathlib.Path(f"{func_base_path}\\{func_file_name}i") # .pyi
 
-    # base on the new types, write to the typing and stub files
     if not typing_file_name:
         # create a typing file in the same dir as func
         typing_file_name = "Types.py"
-    typing_path = pathlib.Path(f"{func_base_path}\\{typing_file_name}")
+    typing_file_path = pathlib.Path(f"{func_base_path}\\{typing_file_name}")
 
+    # Ingots are JSON files created for each python typing file created using stubforge. They contain an index of function names, with theirs stubs and dict_lists
     ingots_dir = pathlib.Path(f"{func_base_path}.stubforge_ingots")
-    ingot_file_path = pathlib.Path(f"{ingots_dir}/{func_file_name.removesuffix(".py")}.json".replace("/", "\\"))
+    ingot_file_path = pathlib.Path(f"{ingots_dir}/{typing_file_name.replace(".py", ".json").replace("/", "\\")}")
 
     if not ingots_dir.exists():
         os.mkdir(ingots_dir)
 
-    for path in ingot_file_path, stub_file_path, typing_path:
+    for path in ingot_file_path, stub_file_path, typing_file_path:
         print(path)
         if not path.exists():
             with open(path, "w") as _:
                 pass 
 
-
-    # update the types and stubs, adding any new or changed types in order
-    # BUG: files will no re-write so long as ingot file exists with no changes to schema.
-    # This means if user changes stub or typing file and then runs this function, the former 2 files
-    # will not update. Add last updated to ingot and compare to stub and typing files 
-
+    object_index: ObjectTypeIndex | None = None
+    
+    # convert the ingot index
     with open(ingot_file_path, "r+") as ingot_f, \
-        open(stub_file_path, "r+") as stub_f, \
-        open(typing_path, "r+") as typing_f:
+        open(typing_file_path, "r+") as typing_f, \
+        open(stub_file_path, "r+") as stub_f:
 
-        # search for function signiture
-        
-        # get just the func args
-        func_sig = func.__name__ + str(inspect.signature(func).replace(return_annotation=inspect.Signature.empty))
+        try:
+            object_list = json.load(ingot_f)
+            object_index = convert_list_to_index(object_list)
 
+        except json.JSONDecodeError:
+            object_index = OrderedDict()
 
-        # TODO Replace this. 
-        new_sig_stub_schema_mapping: SigStubSchemaMapping | None = render_new_stub_schema(
-            ingot_f,
-            func_sig,
-            rendered_stub,
-            schema_list
-        )
-
-        if not new_sig_stub_schema_mapping:
-            return
-
-        for f in [ingot_f, stub_f, typing_f]:
-            f.truncate(0)
+        for f in ingot_f, typing_f, stub_f:
+            f.truncate()
             f.seek(0)
 
-        json.dump(new_sig_stub_schema_mapping, ingot_f, indent=4)
+        rendered_stub: str = f"from typing import TypedDict\nfrom {typing_file_name.removesuffix(".py")} import {object_name}\n\n"
 
-        stub_py: str = f"from typing import TypedDict\nfrom {typing_file_name.removesuffix(".py")} import *\n\n"
-        # write updated stub to file
-        for stub in [new_sig_stub_schema_mapping[f_sig]["stub"] for f_sig in new_sig_stub_schema_mapping.keys()]:
-            # write to stub_f
-            stub_py += stub + "\n"
+        # TODO: move this to the user
+        settings = Settings(
+            trust_keyvalue_consistency=True,
+            max_recursion_depth=30,
+            force_rewrite=True,
+            trust_list_homogeneity=True,
+            dict_probe_policies=DEFUALT_DICT_PROBE_POLICIES
+        )
+        
+        try:
+            object_index = update_object_index(result, object_name, object_index, settings)
 
-        print(stub_py)
-        stub_f.write(stub_py)
+            if object_index:
+                rendered_stub += f"def {func_name}{func_signiture} -> {object_name}: ...\n" # type: ignore [func-returns-value]
+
+            else:
+                rendered_stub += f"def {func_name}{func_signiture} -> {type(result).__name__}: ...\n" # type: ignore [func-returns-value]
+
+            stub_f.write(rendered_stub)
+
+        except RecursionError:
+            raise RecursionError(f"Returned object from {func_name} is too nested.")
+
+        object_list = convert_index_to_list(object_index)
+        typing_py: str = render_typing_py(object_list, func_name)
 
 
-        # TODO: move rendering to parsing functions themselves, or add list rendering (might have to add info as to whether its a dict or list)
-        typing_py: str = "from typing import TypedDict\n\n"
-        for schema_list, f_sig in [[new_sig_stub_schema_mapping[f_sig]["schema_list"], f_sig] for f_sig in new_sig_stub_schema_mapping.keys()]:
-            typing_py += f"# Schema for the function {f_sig} #\n"
+    # update typing and ingot
+    
 
-            if not schema_list:
-                continue
+        print(typing_py)
+    
 
-            for schema in schema_list:
-                typing_py += f'{schema["schema_name"]} = TypedDict("{schema["schema_name"]}", {{'
-                for field_name, field_type in schema["schema_fields_dict"].items():
-                    typing_py += f'\n   "{field_name}" : {field_type},'
-                typing_py += "\n})\n\n"
-
-        typing_f.write(typing_py)        
-
+    
+    
 

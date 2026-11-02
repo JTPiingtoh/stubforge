@@ -16,8 +16,12 @@ DictValueTypes: TypeAlias = tuple[DictValueType]
 @dataclass
 class DTOContainer:
     dto_name: DTOName
-    dto_fields: DictFields
+    dto_field_names: DictFields
     dto_field_types: DictValueTypes
+
+    @property
+    def dto_fields(self):
+        return list(zip(self.dto_field_names, self.dto_field_types))
 
 ObjectTypeIndex: TypeAlias = OrderedDict[DictFields, DTOContainer]
 
