@@ -99,6 +99,7 @@ def stub_builder(
             else:
                 rendered_stub += f"def {func_name}{func_signiture} -> {type(result).__name__}: ...\n" # type: ignore [func-returns-value]
 
+            # TODO: implement managers so multiple functions can write to one pyi
             stub_f.write(rendered_stub)
 
         except RecursionError:
